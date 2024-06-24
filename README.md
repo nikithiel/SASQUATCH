@@ -6,20 +6,20 @@
 **Date:** February 2024\
 **Mail:** thiel@ame.rwth-aachen.de or neidlin@ame.rwth-aachen.de
 ## A) General Idea
-As the name of the program already indicates, this project consists of three major parts:
-1. ***D***ata ***A***nalysis
-2. ***SU***rrogate Model Comparison
-3. ***S***ensitivity ***A***nalysis and uncertainty quantification
-### Data Analysis *(da)*
+This project consists of three major parts:
+1. Data Analysis
+2. Surrogate Model Comparison
+3. Sensitivity Analysis and Uncertainty Quantification
+### Data Analysis 
 Performing **Data Analysis** you get insights in the data you're using. That can help to find outliers and to check whether the program understands the data. You get different plots:
 - Boxplot of distribution of data in columns
 - Correlation Matrix of data
-### Surrogate Model Comparison *(sc)*
+### Surrogate Model Comparison 
 Surrogate Model Comparison gives insights on how well different Surrogate Models perform with predicting the data. To verify their behavior you get the following plots:
 - mean of the timings (training and testing) over a certain number of folds
 - $R^2$-score, Mean Absolut Error and Root Mean Squared Error for each model and outputparameter (colors)
 - Actual vs Predicted values for each output Parameter (subfigure) and Model (color)
-### Sensitivity Analysis *(sa)*
+### Sensitivity Analysis 
 The Sensitivity Analysis provides more insights in th dependencies between input and output parameter. For the chosen models you get a heat-map which shows how sensitive a certain output parameter depends on the inputs:
 - heat-map with sensitivities
 Additionally it is possible to perform the sensitivity analsys with a changing bounds range. With that one can perform **uncertainty quantification**. It can be run with *(uq)*.
