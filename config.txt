@@ -1,5 +1,5 @@
 # Data
-data_path data_all_24-03-04_adj_nam.csv # ../03_Results #
+data_path Data_24-03-04.csv
 output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 # wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
 input_parameter y z alpha R
 output_parameter_sa_plot WSS Eloss Ekin TVPG
