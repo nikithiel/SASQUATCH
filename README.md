@@ -1,9 +1,10 @@
 # User Manual of SASQUATCH
 ***S***ensitivity ***A***nalysi***s*** and Uncertainty ***QUA***n***T***ification in ***C***ardiac ***H***emodynamics
+
 *A framework for sensitivity analysis and uncertainty quantification in cardiac hemodynamics*
 
 **Date:** February 2024\
-**Mail:** thiel@ame.rwth-aachen.de or neidlin@ame.rwth-aachen.de\
+**Mail:** thiel@ame.rwth-aachen.de or neidlin@ame.rwth-aachen.de
 ## A) General Idea
 As the name of the program already indicates, this project consists of three major parts:
 1. ***D***ata ***A***nalysis
