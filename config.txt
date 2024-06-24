@@ -1,0 +1,39 @@
+# Data
+data_path data_all_24-03-04_adj_nam.csv # ../03_Results #
+output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 # wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
+input_parameter y z alpha R
+output_parameter_sa_plot WSS Eloss Ekin TVPG
+
+normalize False
+scaler none
+save_data data_all.csv
+get_mean_of_each_input_pair True
+
+# Models
+models NIPCE GP LR RF KNN # Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree
+
+# Training and Testing
+n_splits 10
+shuffle True
+random_state 44 # rand # 42
+metrics r2_score MAPE # MAXE MAE
+
+# Plotting
+plot_data True
+is_plotting_data True
+is_plotting_correlation_matrix False
+is_plotting_r2_comparison True
+is_plotting_model_data_comparison True
+is_plotting_df_boxplot False
+is_plotting_model_comparison True
+is_plotting_sa_heatmap True
+number_of_top_models 6
+
+# Sensitivity Analysis
+sa_models NIPCE GP LR # NIPCE GP
+sa_17_segment_model NIPCE
+sa_sobol_indice ST # S1 or ST
+sa_sample_size 512
+#sa_output_parameter report-avrg-wss report-energy-loss	report-kin-energy-vol-integral report-tvpg report-wss-1	report-wss-2 report-wss-3 report-wss-4 report-wss-5 report-wss-6 report-wss-7 report-wss-8 report-wss-9 report-wss-10 report-wss-11 report-wss-12 report-wss-13 report-wss-14 report-wss-15 report-wss-16 report-wss-17
+sa_output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
+output_parameter_sa_plot WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
