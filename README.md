@@ -3,7 +3,7 @@
 
 *A framework for sensitivity analysis and uncertainty quantification in cardiac hemodynamics*
 
-**Date:** February 2024\
+**Date:** June 2024\
 **Mail:** thiel@ame.rwth-aachen.de or neidlin@ame.rwth-aachen.de
 ## A) General Idea
 This project consists of three major parts:
@@ -125,3 +125,15 @@ In this project you need to install the following libraries:\
 | chaospy | 4.3.13 |
 | time |  |
 | warnings |  |
+
+## E) Application
+This tool was used in the following publication:
+
+*Quantifying the Impact of Mitral Valve Anatomy on Clinical Markers Using Surrogate Models and Sensitivity Analysis* 
+Link:!!!TBA!!!
+
+The input/output pairs used for training the surrogate models were create using Ansys Fluent CFD simulations. More details on using this automated CFD model and the corresponding setup files can be found here:
+
+https://doi.org/10.5281/zenodo.12519189
+
+https://www.youtube.com/watch?v=gO0ZYzpblLA
