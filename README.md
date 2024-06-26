@@ -129,8 +129,8 @@ In this project you need to install the following libraries:\
 ## E) Application
 This tool was used in the following publication:
 
-*Quantifying the Impact of Mitral Valve Anatomy on Clinical Markers Using Surrogate Models and Sensitivity Analysis* 
-Link:!!!TBA!!!
+*Quantifying the Impact of Mitral Valve Anatomy on Clinical Markers Using Surrogate Models and Sensitivity Analysis* \
+https://engrxiv.org/preprint/view/3785
 
 The input/output pairs used for training the surrogate models were create using Ansys Fluent CFD simulations. More details on using this automated CFD model and the corresponding setup files can be found here:
 
