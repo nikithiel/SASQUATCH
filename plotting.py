@@ -477,6 +477,8 @@ def save_plot(plt, file_path):
         
     # save figure
     plt.savefig(file_path+".svg", format='svg', bbox_inches='tight')
+    plt.savefig(file_path+".png")
+    plt.savefig(file_path+".pdf")
     
 def get_figsize():
     """Returns the standard figure size
