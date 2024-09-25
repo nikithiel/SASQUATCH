@@ -123,8 +123,9 @@ In this project you need to install the following libraries:\
 | scipy | 1.12.0 |
 | scikit-learn | 1.3.2 |
 | chaospy | 4.3.13 |
-| time |  |
-| warnings |  |
+| times |  |
+| SALib |  |
+| statsmodels |  |
 
 ## E) Application
 This tool was used in the following publication:
