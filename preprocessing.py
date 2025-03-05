@@ -132,7 +132,9 @@ def preprocessing(**args):
     """
     return mv_uq_procect_preprocessing(**args)
     
-def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, normalize=False, scaler='none', get_mean=False):
+def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, \
+                                normalize=False, scaler='none', get_mean=False,
+                                is_transient=False, lower_bound=721, upper_bound=1200):
     """Preprocessing for mitral valve uncertainty quantification. Cutting first 720 Time Steps.
     
     Args:
@@ -142,26 +144,32 @@ def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, normalize
         - normalize: bool -> whether data is normalized
         - scaler: str -> defines scaler
         - get_mean: bool -> whether calculate mean of e.g. timesteps
+        - is_transient: bool -> whether data is transient (and filtering is required)
+        - lower_bound: int -> lower bound of time steps to keep
+        - upper_bound: int -> upper bound of time steps to keep
+        
     Returns:
         X_df: dataFrame -> preprocessed input data
         y_df: dataFrame -> preprocessed output data
     """
-    # keeps only instances with values between lower and upper bound    
-    lower_bound = 721
-    upper_bound = 1200
-    column_name = "Time Step"
-    df= df[(df[column_name] >= lower_bound) & (df[column_name] <= upper_bound)]
 
-    df.to_csv("test_after_prep.csv", index=False)
+    # Keeps only instances with values between lower and upper bound
+    if is_transient:
+        # Filter for transient data based on time steps.
+        column_name = "Time Step"
+        df = df[(df[column_name] >= lower_bound) & (df[column_name] <= upper_bound)]
+
+        df.to_csv(output_path + "/test_after_prep.csv", index=False)
     
     # Normalizing and scaling data:
     if normalize: df = normalize_data(df)
     if scaler != 'none': df = scale_data(df, scaler)
     
     if get_mean: data_df = mean_of_timesteps(df, input_parameter)
-    data_df.to_csv("reduced_data.csv")
+    data_df.to_csv(output_path + "/reduced_data.csv")
     
     # split df into input and output
     X_df = data_df[input_parameter]
     y_df = data_df[output_parameter]
+
     return X_df, y_df

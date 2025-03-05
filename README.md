@@ -17,11 +17,12 @@ Performing **Data Analysis** you get insights in the data you're using. That can
 ### Surrogate Model Comparison 
 Surrogate Model Comparison gives insights on how well different Surrogate Models perform with predicting the data. To verify their behavior you get the following plots:
 - mean of the timings (training and testing) over a certain number of folds
-- $R^2$-score, Mean Absolut Error and Root Mean Squared Error for each model and outputparameter (colors)
-- Actual vs Predicted values for each output Parameter (subfigure) and Model (color)
+- $R^2$-score, Mean Absolut Error and Root Mean Squared Error for each model and output parameter (colors)
+- Actual vs Predicted values for each output parameter (subfigure) and model (color)
+All models are being saved using pickle. Use pkl.load() and model.predict() to use the models in another coding project.
 ### Sensitivity Analysis 
 The Sensitivity Analysis provides more insights in th dependencies between input and output parameter. For the chosen models you get a heat-map which shows how sensitive a certain output parameter depends on the inputs:
-- heat-map with sensitivities
+- heatmap with sensitivities
 Additionally it is possible to perform the sensitivity analsys with a changing bounds range. With that one can perform **uncertainty quantification**. It can be run with *(uq)*.
 ### Project Specific *(ps)*
 It is also possible to add a project specific program.
@@ -55,16 +56,19 @@ Here is a short description:
 ### Data
 | Name | Example input | Note |
 | ---- | ---- | ---- |
+| run_type | 'su' | use any of da, sc, sa, uq, or ps |
 | data_path | `data_df.scv` *or* `../03_Results` | .xlsx, .csv, and ansys .out files |
 | input_parameter | `y z alpha` | use column names of .csv/.xlsx |
 | output_parameter | `energy-loss wss` | use column names of .csv/.xlsx |
-| output_parameter _sa_plot | `Energy_loss WSS` | names for the |
+| output_parameter _sa_plot | `Energy_loss WSS` | names for the outputs |
+| output_name | example | define the name of the output folder |
+| is_transient | `True` | whether data is transient or not. Reduced data saved in `test_after_prep.csv` |
+| lower_bound | `720` | lower bound of time steps to keep |
+| upper_bound | `1200` | upper bound of time steps to keep |
 | normalize | `True` | normalizing data |
 | scaler | `'none'` *or* `'minmax'` *or* `'standard'` | scale data |
 | save_data | `True` | save the data in .csv file |
-| get_mean_of_ each_input_pair | `True` | mean over e.g. timesteps in data set |
-
-*To define the outputfolder go to `plotting.py` ll. 17 and specify the `save_fig_path` variable.*
+| get_mean_of_ each_input_pair | `True` | mean over e.g. timesteps in data set. Averaged data saved in `reduced_data.csv` |
 
 ### Models
 | Name | Example input | Explanation |
@@ -80,7 +84,7 @@ Here is a short description:
 | models | `NIPCE` | Non intrusive polynomial chaos expansion |
 | models | `GP` | Gaussian Process |
 | models | `DecisionTree` | Decision Tree |
-| nipce_order | `2` | Order of NIPCE Model |
+| NIPCE_order | `1 2 3 4` | Specify one or multiple orders for NIPCE model |
 
 ### Training and Testing
 | Name | Example input | Explanation |
@@ -93,7 +97,7 @@ Here is a short description:
 | Name | Example input | Note |
 | ---- | ---- | ---- |
 | plot_data | `True` | pair-plot (scatter) of data frame (currently not used)|
-| is_plotting_... | `True` | currently not used |
+| is_plotting_... | `True` | specify if plotting should be utilized or not |
 
 ### Sensitivity Analysis
 | Name | Example input | Explanation |

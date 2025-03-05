@@ -1,5 +1,6 @@
 from preprocessing import read_ansys_output_to_dfs, mean_of_timesteps, normalize_data, scale_data, mv_uq_procect_preprocessing
 import pandas as pd
+import os
 
 def read_user_defined_parameters(filename):
     """Reading user defined parameter from config.txt file.
@@ -42,26 +43,34 @@ def read_user_defined_parameters(filename):
 
     return config_data
 
-def read_data(data_path, da=False, save_data='data.cvs'):
+def read_data(data_path, output_path, da=False, save_data='data.cvs'):
     """Reads the .xlsx, .csv, or .out files with data.
 
     Args:
         - data_path: int -> path to data
+        - output_path: str -> path to save data
         - da: bool -> True if you perform Data Analysis
         - save_data: bool -> whether data is saved to .csv
     Returns:
         - X_df_all: dataFrame -> contains all data
     """
     # ----- DATA Preprocessing ----- #
-    # reading data from Ansys output and calcuate mean over timesteps
+    # Reading data from Ansys output and calcuate mean over timesteps
     
+    data_path = f"input_data/{data_path}"
+
     if ".xlsx" in data_path: data_df_all = pd.read_excel(data_path) # xlsx files
     if ".csv" in data_path: data_df_all = pd.read_csv(data_path) # csv files
     else: data_df_all = read_ansys_output_to_dfs(data_path, da=da) # Ansys Output Files
     
-    # saving data
+    # Saving data
     if save_data.lower() != 'false':
-        data_df_all.to_csv(save_data, index=False)
+        # Check directory and creating directory if necessary
+        directory = os.path.dirname(output_path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        data_df_all.to_csv(output_path + "/" + save_data, index=False)
     
     return data_df_all
 

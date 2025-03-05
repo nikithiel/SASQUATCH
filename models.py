@@ -8,8 +8,9 @@ from sklearn.tree import DecisionTreeRegressor
 import chaospy as cp
 import pandas as pd
 import numpy as np
+import os
 
-def creatingModels(model_names, bounds):
+def creatingModels(model_names, bounds, parameter):
     """Creates models.
 
     Args:
@@ -50,16 +51,16 @@ def creatingModels(model_names, bounds):
         final_model_names.append('Bayesian Ridge')
     if 'NIPCE' in model_names:
         distributions = [cp.Uniform(variable['min'], variable['max']) for variable in bounds.values()]
-        # to find a good order
-        find_good_order = False
-        if find_good_order:
-            for order in np.arange(1, 7, 1):
-                nipce_name = str(order)
+
+        if 'NIPCE_order' in parameter:
+            for order in parameter['NIPCE_order']:
+                nipce_name = 'NIPCE_order_' + str(order)
                 models[nipce_name] = NIPCE(order=order, distributions=distributions)
                 final_model_names.append(nipce_name)
         else:
-            models['NIPCE'] = NIPCE(order=2, distributions=distributions)
-            final_model_names.append('NIPCE')
+            models['NIPCE_order_3'] = NIPCE(order=3, distributions=distributions)
+            final_model_names.append('NIPCE_order_3')
+            print("! Warning: NIPCE order not specified, using default order 3 !")
     if 'GP' in model_names:
         length_scale = [(bound['max'] - bound['min']) for bound in bounds.values()]
         # for finding a good parameter nu
@@ -118,10 +119,11 @@ class NIPCE:
         """
         if isinstance(X,  pd.DataFrame): X = X.values
         self.model = cp.fit_regression(self.expansion, X.T, y)
+
         return self.model
 
     def predict(self, X_test):
-        """Fit the NIPCE model using chaospy.
+        """Test the trained NIPCE model.
 
         Args:
             X_test: dataFrame or numpy_array -> input data

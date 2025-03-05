@@ -1,7 +1,9 @@
 import pandas as pd
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("QtAgg")
 import seaborn as sns
 import numpy as np
+import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 from sklearn.multioutput import MultiOutputRegressor
@@ -12,9 +14,6 @@ from matplotlib import ticker
 from scipy.stats import gaussian_kde
 from sklearn.metrics import r2_score
 from statsmodels.multivariate.manova import MANOVA
-
-# global plotting settings
-save_fig_path = "./Plots_24-06-10/"
 
 ######### THESIS SPECIFIC #########
 thesis = True
@@ -54,12 +53,14 @@ plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
 plt.rcParams['font.size'] = 11
 
-def plot_smc_r2score_and_errors(df, output_parameter, metrics=['r2_score', 'RMSE', 'MAPE'], is_title=True, title="Surrogate Model Comparison Plots", average_output=False, rmse_log_scale=False, figure_size = (6.5,4)):
+def plot_smc_r2score_and_errors(df, output_parameter, output_path, metrics=['r2_score', 'RMSE', 'MAPE'], \
+                                is_title=True, title="Surrogate Model Comparison Plots", average_output=False, rmse_log_scale=False, figure_size = (6.5,4)):
     """Plots and saves the R2 score and Errors.
 
     Args:
         - df: dataFrame -> contains sc result data
         - output_parameter: list -> list of strings of output_parameter
+        - output_path: str -> path to save the plot
         - metrics: list -> list of metrics
         - is_title: bool -> whether title is present
         - title: str -> title of plot / name of saved figure
@@ -89,6 +90,8 @@ def plot_smc_r2score_and_errors(df, output_parameter, metrics=['r2_score', 'RMSE
         # Filter mean_scores DataFrame for the current metric
         filtered_df = mean_scores[mean_scores['Output Parameter'].str.startswith(metric)].copy()
 
+        if metric == 'MAPE': filtered_df['Value'] = filtered_df['Value'] * 100
+
         # remove metric string (RMSE, MAE, r2_score) for legend
         for metric_in_metrics in metrics:
             filtered_df['Output Parameter'] = filtered_df['Output Parameter'].str.replace(metric_in_metrics + '_', '')
@@ -102,9 +105,10 @@ def plot_smc_r2score_and_errors(df, output_parameter, metrics=['r2_score', 'RMSE
                         
         metric_title = metric
         if metric == 'r2_score': metric_title=r'R$^2$ Score'
+        if metric == 'MAPE': metric_title='MAPE in %'
         if len(metrics) == 1:
-            if average_output: sns.barplot(x='Model', y='Value', color='tab:blue', data=filtered_df, ax=axes)
-            else: sns.barplot(x='Model', y='Value', hue='Output Parameter', data=filtered_df, ax=axes)
+            if average_output: sns.barplot(x='Model', y='Value', color='tab:blue', data=filtered_df, ax=axes, errorbar='ci')
+            else: sns.barplot(x='Model', y='Value', hue='Output Parameter', data=filtered_df, ax=axes, errorbar='ci')
             # Set title, xlabel, and ylabel for the current subplot
             axes.set_title(f'{metric_title}')
             axes.set_xlabel('')
@@ -112,8 +116,8 @@ def plot_smc_r2score_and_errors(df, output_parameter, metrics=['r2_score', 'RMSE
             axes.tick_params(axis='x', rotation=0)
             if not average_output: axes.legend_.remove()
         else:
-            if average_output: sns.barplot(x='Model', y='Value', color='tab:blue', data=filtered_df, ax=axes[i])
-            else: sns.barplot(x='Model', y='Value', hue='Output Parameter', data=filtered_df, ax=axes[i])
+            if average_output: sns.barplot(x='Model', y='Value', color='tab:blue', data=filtered_df, ax=axes[i], errorbar='ci')
+            else: sns.barplot(x='Model', y='Value', hue='Output Parameter', data=filtered_df, ax=axes[i], errorbar='ci')
             # Set title, xlabel, and ylabel for the current subplot
             axes[i].set_title(f'{metric_title}')
             axes[i].set_xlabel('')
@@ -132,14 +136,15 @@ def plot_smc_r2score_and_errors(df, output_parameter, metrics=['r2_score', 'RMSE
                     labels[i] = output_dict[label]
             plt.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left', fontsize='small')
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path + title)
 
-def plot_densitys(X_dict, Y_dict, lables=None, is_title=True, title="Densities plot"):
+def plot_densitys(X_dict, Y_dict, output_path, lables=None, is_title=True, title="Densities plot"):
     """Plots and saves the distribution of each feature of the DataFrame.
 
     Args:
         - X_dict: dict -> Dictionary containing arrays for each model's test results
         - Y_dict: dict -> Dictionary containing labels for each model
+        - output_path: str -> path to save the plot
         - is_title: bool -> Whether to display the title
         - title: str -> Title of the plot / name of the saved figure
     """
@@ -179,13 +184,14 @@ def plot_densitys(X_dict, Y_dict, lables=None, is_title=True, title="Densities p
 
     plt.suptitle(title if is_title else None)
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path+title)
 
-def plot_feature_distribution(df, num_bins=10, is_title=True, title="Plot of Feature Distributions", num_subplots_in_row=3, figure_size='large'):
+def plot_feature_distribution(df, output_path, num_bins=10, is_title=True, title="Plot of Feature Distributions", num_subplots_in_row=3, figure_size='large'):
     """Plots and saves the distribution of each feature of the dataFrame.
 
     Args:
         - df: dataFrame -> contains data
+        - output_path: str -> path to save the plot
         - num_bins: int -> number of bins
         - title: str -> title of plot / name of saved figure
     """
@@ -214,15 +220,16 @@ def plot_feature_distribution(df, num_bins=10, is_title=True, title="Plot of Fea
     
     plt.suptitle(title if is_title else None)
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path + title)
 
-def plot_feature_scatterplot(df, x_cols, y_cols, is_title=True, title="Scatterplot"):
+def plot_feature_scatterplot(df, x_cols, y_cols, output_path, is_title=True, title="Scatterplot"):
     """Plots and saves scatterplot of two columns from the DataFrame.
     
     Args:
         - df: DataFrame -> contains data
         - x_cols: list -> names of the columns for x-axis
         - y_cols: list -> names of the columns for y-axis
+        - output_path: str -> path to save the plot
         - title: str -> title of plot
     """
     n_plots = len(x_cols) * len(y_cols)
@@ -241,13 +248,14 @@ def plot_feature_scatterplot(df, x_cols, y_cols, is_title=True, title="Scatterpl
                 ax.set_title(f"{title} - {input_dict[x_col]} vs {y_col}")
 
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path + title)
 
-def plot_smc_timings(df, is_title=True, title="Boxplot of Timings of All Folds of Each Model"):
+def plot_smc_timings(df, output_path, is_title=True, title="Boxplot of Timings of All Folds of Each Model"):
     """Plots and saves the training and testing timings.
 
     Args:
         - df: dataFrame -> contains sc result data
+        - output_path: str -> path to save the plot
         - title: str -> title of plot / name of saved figure
     """
     # Plotting the bar plot
@@ -263,27 +271,29 @@ def plot_smc_timings(df, is_title=True, title="Boxplot of Timings of All Folds o
 
     # Show plot
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path + title)
 
-def plot_data(X_df, y_df, is_title=True, title="Pairplot of Data"):
+def plot_data(X_df, y_df, output_path, is_title=True, title="Pairplot of Data"):
     """Plots and saves the pairplot of data.
 
     Args:
         - X_df: dataFrame -> contains input data
         - y_df: dataFrame -> contains output data
+        - output_path: str -> path to save the plot
         - title: str -> title of plot / name of saved figure
     """
     # Create a DataFrame combining selected features and outputs
     sns.pairplot( pd.concat([X_df, y_df], axis=1))
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path + title)
 
-def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_parameter=['WSS', 'Eloss', 'Ekin', 'TVPG'], is_title=True, title="Surrogate Model Comparison"):
+def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_parameter, is_title=True, title="Surrogate Model Comparison"):
     """Plots and saves the model comparison (actual vs predicted).
 
     Args:
         - models: dict -> contains the models
         - X_df: dataFrame -> contains input data
         - y_df: dataFrame -> contains output data
+        - output_path: str -> path to save the plot
         - title: str -> title of plot / name of saved figure
     """
     # determine subfigure order
@@ -293,7 +303,7 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_parameter=['W
     if num_output_parameters > 4:
         num_cols = (num_output_parameters + 1) // 2
     
-    fig, axs = plt.subplots(num_rows, num_cols, figsize=(6.5,5))
+    fig, axs = plt.subplots(num_rows, num_cols, figsize=(6.5, 5))
     axs = axs.flatten()
 
     for i, output_name in enumerate(y_df[output_parameter].columns):
@@ -316,13 +326,13 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_parameter=['W
     handles, labels = axs[0].get_legend_handles_labels()
     fig.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left')
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path + title)
 
 def show_plots():
     """Shows plots"""
     plt.show()
 
-def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, sa_sobol_indice):
+def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_path, sa_sobol_indice):
     """Plots and saves the sensitivity heatmap.
 
     Args:
@@ -330,6 +340,7 @@ def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, outpu
         - model_names: list -> list of names of models
         - input_parameter_list: list -> list of input parameter
         - output_parameter_sa_plot: list -> list of output parameters for sa plot
+        - output_path: str -> path to save the plot
         - sa_sobol_indice: str -> Sobol indice for sa (ST or S1)
     """
     input_parameter_list = list(input_parameter_list)
@@ -357,14 +368,15 @@ def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, outpu
                 axes[i].set_title(model)            
 
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path + title)
 
-def plot_sa_results_17_segments(sa_results_dict, input_names, sa_17_segment_model, sa_sobol_indice):
+def plot_sa_results_17_segments(sa_results_dict, input_names, output_path, sa_17_segment_model, sa_sobol_indice):
     """Plots and saves the 17-segments plot.
 
     Args:
         - sa_results_dict: dataFrame -> contains sensitivity analysis results
         - input_names: list -> list of str with names of inputs
+        - output_path: str -> path to save the plot
         - sa_17_segment_model: Surrogate Model -> which model shall be used
         - sa_sobol_indice: str -> Sobol indice for sa (ST or S1)
     """
@@ -420,14 +432,15 @@ def plot_sa_results_17_segments(sa_results_dict, input_names, sa_17_segment_mode
             cbar.ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
     plt.tight_layout()    
-    save_plot(plt, save_fig_path+sa_sobol_indice+" 17 Segments")
+    save_plot(plt,  output_path + sa_sobol_indice+" 17 Segments")
 
-def plot_boxplots(X_df, y_df, is_title=True, title="Boxplots of Dataframe"):
+def plot_boxplots(X_df, y_df, output_path, is_title=True, title="Boxplots of Dataframe"):
     """Plots and saves the boxplot of a dataframe.
 
     Args:
         - X_df: DataFrame -> contains the data for inputs
         - y_df: DataFrame -> contains the data for boxplots
+        - output_path: str -> path to save the plot
         - title: str -> title of plot and name of saved figure
     """
     num_columns = y_df.shape[1]
@@ -442,15 +455,16 @@ def plot_boxplots(X_df, y_df, is_title=True, title="Boxplots of Dataframe"):
 
     plt.suptitle(title if is_title else None)
     #plt.tight_layout()
-    save_plot(plt, save_fig_path + title)
+    save_plot(plt, output_path + title)
     plt.show()
 
-def plot_correlation(X_df, y_df, is_title=True, title="Correlation Matrix of Dataframe"):
+def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation Matrix of Dataframe"):
     """Plots and saves the correlation matrix of a dataframe.
 
     Args:
         - X_df: dataFrame -> contains the data for inputs
         - y_df: dataFrame -> contains the data for outputs
+        - output_path: str -> path to save the plot
         - title: st -> title of plot and name of saved figure
     """
     # Compute the correlation matrix
@@ -461,7 +475,7 @@ def plot_correlation(X_df, y_df, is_title=True, title="Correlation Matrix of Dat
     plt.figure(figsize=get_figsize())
     sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f")
     plt.title(title if is_title else None)
-    save_plot(plt, save_fig_path+title)
+    save_plot(plt, output_path + title)
 
 def save_plot(plt, file_path):
     """Saves a plot.
@@ -476,9 +490,9 @@ def save_plot(plt, file_path):
         os.makedirs(directory)
         
     # save figure
-    plt.savefig(file_path+".svg", format='svg', bbox_inches='tight')
-    plt.savefig(file_path+".png")
-    plt.savefig(file_path+".pdf")
+    plt.savefig(file_path + ".svg", format='svg', bbox_inches='tight')
+    plt.savefig(file_path + ".png")
+    plt.savefig(file_path + ".pdf")
     
 def get_figsize():
     """Returns the standard figure size
@@ -488,12 +502,13 @@ def get_figsize():
     """
     return (6.5, 4)
 
-def bounds_variation_plot(data, output_parameter, is_title=True, title="Bounds Variation plot", x_annot="Input Variation", y_annot="Output Variation", legend=True):
+def bounds_variation_plot(data, output_parameter, output_path, is_title=True, title="Bounds Variation plot", x_annot="Input Variation", y_annot="Output Variation", legend=True):
     """Plots and saves the distribution of each feature of the DataFrame.
 
     Args:
         - X_dict: dict -> Dictionary containing arrays for each model's test results
         - Y_dict: dict -> Dictionary containing labels for each model
+        - output_path: str -> path to save the plot
         - is_title: bool -> Whether to display the title
         - title: str -> Title of the plot / name of the saved figure
     """
@@ -525,45 +540,7 @@ def bounds_variation_plot(data, output_parameter, is_title=True, title="Bounds V
     
     plt.title(title if is_title else None)
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title)
-
-def bounds_mean_std(data, output_parameters=[0], output_names = ['default'], model='GP', is_title=True, title="Bounds Variation plot", x_annot="Input Variation", y_annot="Output Variation", all_in_one=False, annotation='all'):
-    uncertainties = sorted(data.keys())
-    num_params = len(output_parameters)
-    num_plots = len(data[uncertainties[0]][model][0])
-    
-    fig, axes = plt.subplots(num_params if all_in_one == False else 1, 1, figsize=(6.5,9))
-    if num_params < 10: colors = plt.get_cmap('tab10').colors
-    else: colors = plt.get_cmap('tab20').colors
-    for i, output_parameter in enumerate(output_parameters):
-        plot_data = []
-        for uncertainty in uncertainties:
-            data_u_m_o = data[uncertainty][model][:, output_parameter]
-            plot_data.append(data_u_m_o[~np.isnan(data_u_m_o)])
-
-        mean_values = np.array([np.mean(data) for data in plot_data])
-        std_values = np.array([np.std(data) for data in plot_data])
-
-        # Plotting
-        ax = axes[i] if num_params > 1 and all_in_one == False else axes
-        ax.plot(uncertainties, mean_values, color=colors[i], label=output_names[i]+" Mean")
-        ax.fill_between(uncertainties, mean_values - std_values, mean_values + std_values, color=colors[i], alpha=0.4, label='Std' if num_params==1 else None)
-        ax.set_xlabel(x_annot)
-        ax.set_ylabel(y_annot)
-        if all_in_one==False:
-            ax.set_title(output_names[i])#f'Parameter {output_parameter}')            
-        else:
-            if num_params <4: ax.legend()
-            else: ax.legend(loc='center left', bbox_to_anchor=(1.01, 0.5))
-        for x, mean_val, std_val in zip(uncertainties, mean_values, std_values):
-            mean_val
-            if annotation == 'all': ax.text(x, mean_val, f'Mean: {format_value(mean_val)}\nStd: {format_value(std_val)}\nPstd: {100*std_val/mean_val:.2f}%', ha='center', va='bottom')
-            if annotation == 'psdt': ax.text(x, mean_val, f'Pstd: {100*std_val/mean_val:.2f}%', ha='center', va='bottom')
-
-    # Title and other adjustments
-    fig.suptitle(title if is_title else None)
-    plt.tight_layout()
-    save_plot(plt, save_fig_path+title+"_"+model+"_"+annotation)
+    save_plot(plt, output_path + title)
 
 def format_value(value):
     if abs(value) < 1e-2 or abs(value) > 1e3:
@@ -571,7 +548,8 @@ def format_value(value):
     else:
         return f"{value:.2f}"  # Use fixed-point notation with 2 decimal places
 
-def bounds_mean_std(data, output_parameters=[0], output_names = ['default'], model='GP', is_title=True, title="Bounds mean std", x_annot="Input Variation", y_annot="Output Variation", all_in_one=False, annotation='all', figsize = (6.5,6.5)):
+def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['default'], model='GP', is_title=True, title="Bounds Variation plot", \
+                    x_annot="Input Variation", y_annot="Output Variation", all_in_one=False, annotation='all', figsize = (6.5, 9.0)):
     uncertainties = sorted(data.keys())
     num_params = len(output_parameters)
     num_plots = len(data[uncertainties[0]][model][0])
@@ -587,8 +565,10 @@ def bounds_mean_std(data, output_parameters=[0], output_names = ['default'], mod
 
         mean_values = np.array([np.mean(data) for data in plot_data])
         std_values = np.array([np.std(data) for data in plot_data])
+
         print("std_val: ", output_names[i], " ",std_values)
         print("std_prc: ", output_names[i], " ",100*std_values/mean_values)
+
         # Plotting
         ax = axes[i] if num_params > 1 and all_in_one == False else axes
         ax.plot(uncertainties, mean_values, color=colors[i], label=output_dict[output_names[i]]+" Mean")
@@ -610,9 +590,9 @@ def bounds_mean_std(data, output_parameters=[0], output_names = ['default'], mod
     # Title and other adjustments
     fig.suptitle(title if is_title else None)
     plt.tight_layout()
-    save_plot(plt, save_fig_path+title+"_"+model+"_"+annotation)
+    save_plot(plt, output_path + title + "_" + model + "_" + annotation)
 
-def bounds_sobol(data, output='None',model_name='GP', sobol_index='ST', inputs = ['y', 'z', 'alpha', 'R'], is_title=True, title="Bounds sobol", x_annot="Input Variation", y_annot="Sensitivity"):    
+def bounds_sobol(data, output_path, output='None',model_name='GP', sobol_index='ST', inputs = ['y', 'z', 'alpha', 'R'], is_title=True, title="Bounds sobol", x_annot="Input Variation", y_annot="Sensitivity"):    
     uncertainty_values_to_plot = list(data.keys())  # Uncertainty values to plot
     outputs = list(data[uncertainty_values_to_plot[0]][model_name].keys())
     if thesis:
@@ -649,7 +629,7 @@ def bounds_sobol(data, output='None',model_name='GP', sobol_index='ST', inputs =
     fig.legend(labels=inputs, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(inputs))
     plt.suptitle(title if is_title else None)
     #plt.tight_layout()#h_pad=0, w_pad=0)
-    save_plot(plt, save_fig_path+title+'_'+model_name+'_'+sobol_index)
+    save_plot(plt, output_path + title + '_' + model_name + '_' + sobol_index)
     plt.show()
 
 # Print functions
@@ -690,4 +670,32 @@ def print_dict_stats(dict, model, id='none'):
         max_values = np.nanmax(values, axis=0)
         variation = 100*(max_values-min_values)/min_values
         if model == model_return or i==0: variation_return = variation
-    return variation_return    
+    return variation_return
+
+def actual_scatter_plot(X_df, y_df, output_path, is_title=True, title="Pairplot of Data reduced"):
+
+    plot_size = max(X_df.shape[1], y_df.shape[1])
+    plt.rcParams['mathtext.fontset'] = 'stix'
+    plt.rcParams['font.family'] = 'STIXGeneral'
+    plt.rcParams['font.size'] = 10
+    fig, axes = plt.subplots(plot_size, plot_size, figsize=(20.,20.))
+    i = 0
+    j = 0
+
+    for names, values in y_df.items():
+        for names2, values2 in X_df.items():
+            if j == 0:
+                axes[i][j].set_ylabel(names, fontsize=30)
+            if i == 6:
+                if names2 == 'rpm':
+                    axes[i][j].set_xlabel('ECMOrpm', fontsize= 30)
+                else:
+                    axes[i][j].set_xlabel(names2, fontsize=30)
+
+            axes[i][j].scatter(X_df[names2].values, y_df[names].values, marker='.')
+            j += 1
+        i += 1
+        j = 0
+
+    fig.tight_layout()
+    save_plot(plt, output_path + title)
