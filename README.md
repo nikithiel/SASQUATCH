@@ -59,7 +59,9 @@ Here is a short description:
 | run_type | 'su' | use any of da, sc, sa, uq, or ps |
 | data_path | `data_df.scv` *or* `../03_Results` | .xlsx, .csv, and ansys .out files |
 | input_parameter | `y z alpha` | use column names of .csv/.xlsx |
+| input_units | `mm mm °` | units of input parameter |
 | output_parameter | `energy-loss wss` | use column names of .csv/.xlsx |
+| output_units | `Pa m^3 Pa` | units of output parameter |
 | output_parameter _sa_plot | `Energy_loss WSS` | names for the outputs |
 | output_name | example | define the name of the output folder |
 | is_transient | `True` | whether data is transient or not. Reduced data saved in `test_after_prep.csv` |
