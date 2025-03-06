@@ -89,7 +89,7 @@ def train_and_save_models(X, y, models, folder):
         with open(model_path, 'wb') as f:
                 pkl.dump(fitted_model, f)
 
-        if model_name == 'NIPCE':
+        if 'NIPCE' in model_name:
 
             polynomFile = os.path.join(folder, 'NIPCE_order_' + str(fitted_model.estimator.order) + '.txt')
 
@@ -101,28 +101,3 @@ def train_and_save_models(X, y, models, folder):
 
         print("    Training of ", model_name, ": Done")
         print(f"    {model_name} saved to {model_path}")
-
-        ### TESTING ONLY ###
-        if model_name == 'GP':
-            
-            csv = os.path.join('input_data','Data_example.csv')
-            df = pd.read_csv(csv)
-
-            model_NIPCE_2 = pkl.load(open(os.path.join(folder, 'NIPCE_order_2.pkl'), 'rb'))
-            model_NIPCE_4 = pkl.load(open(os.path.join(folder, 'NIPCE_order_4.pkl'), 'rb'))
-            model_LR = pkl.load(open(os.path.join(folder, 'LR.pkl'), 'rb'))
-            model_GP = pkl.load(open(os.path.join(folder, 'GP.pkl'), 'rb'))
-
-            sample = df.sample()
-            print(sample)
-            
-            sample_input = sample.iloc[:, 0:4].copy()
-            res_NIPCE_2 = model_NIPCE_2.predict(sample_input)
-            res_NIPCE_4 = model_NIPCE_4.predict(sample_input)
-            res_LR = model_LR.predict(sample_input)
-            res_GP = model_GP.predict(sample_input)
-            print('NIPCE 2:', res_NIPCE_2)
-            print('NIPCE 4:', res_NIPCE_4)
-            print('RL:', res_LR)
-            print('GP:', res_GP)
-            print('Testing done!')

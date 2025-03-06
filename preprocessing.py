@@ -165,7 +165,11 @@ def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_pa
     if normalize: df = normalize_data(df)
     if scaler != 'none': df = scale_data(df, scaler)
     
-    if get_mean: data_df = mean_of_timesteps(df, input_parameter)
+    if get_mean: 
+        data_df = mean_of_timesteps(df, input_parameter)
+    else:
+        data_df = df
+        
     data_df.to_csv(output_path + "/reduced_data.csv")
     
     # split df into input and output

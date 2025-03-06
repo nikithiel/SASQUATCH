@@ -53,13 +53,19 @@ def creatingModels(model_names, bounds, parameter):
         distributions = [cp.Uniform(variable['min'], variable['max']) for variable in bounds.values()]
 
         if 'NIPCE_order' in parameter:
-            for order in parameter['NIPCE_order']:
-                nipce_name = 'NIPCE_order_' + str(order)
+
+            orders = parameter['NIPCE_order']
+
+            if isinstance(parameter['NIPCE_order'], int):
+                orders = [orders]
+
+            for order in orders:
+                nipce_name = 'NIPCE ' + str(order)
                 models[nipce_name] = NIPCE(order=order, distributions=distributions)
                 final_model_names.append(nipce_name)
         else:
             models['NIPCE_order_3'] = NIPCE(order=3, distributions=distributions)
-            final_model_names.append('NIPCE_order_3')
+            final_model_names.append('NIPCE 3')
             print("! Warning: NIPCE order not specified, using default order 3 !")
     if 'GP' in model_names:
         length_scale = [(bound['max'] - bound['min']) for bound in bounds.values()]
@@ -87,6 +93,10 @@ def creatingModels(model_names, bounds, parameter):
     if 'DecisionTree' in model_names:
         models['Decition Tree'] = DecisionTreeRegressor()
         final_model_names.append('Decition Tree')
+
+    if isinstance(model_names, str):
+        model_names = [model_names]
+        
     for model in model_names:
         if model not in implemented_models:
             print("! Warning: Ignoring Unknown Model: ", model," !")

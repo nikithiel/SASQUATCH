@@ -51,7 +51,9 @@ if run_type == 'da':
     try:
         data_path = parameter['data_path']
         input_parameter = parameter['input_parameter']
+        input_units = parameter['input_units']
         output_parameter = parameter['output_parameter']
+        output_units = parameter['output_units']
         output_data = './output_data/' + parameter['output_name'] + '/'
         output_plots = output_data + 'Plots/'
         save_data = parameter['save_data']
@@ -75,7 +77,7 @@ if run_type == 'da':
     show_plots()
     plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter")
     show_plots()
-    plot_feature_distribution(y_df, output_plots, num_bins=20, title="Distribution of Output Parameter")
+    plot_feature_distribution(y_df, output_plots, dict(zip(output_parameter, output_units)), num_bins=20, title="Distribution of Output Parameter")
     show_plots()
     plot_data(X_df, y_df, output_plots)
     show_plots()
@@ -91,6 +93,7 @@ elif run_type == 'su' or run_type == 'sc':
         data_path = parameter['data_path']
         input_parameter = parameter['input_parameter']
         output_parameter = parameter['output_parameter']
+        output_units = parameter['output_units']
         output_data = './output_data/' + parameter['output_name'] + '/'
         output_plots = output_data + 'Plots/'
         model_names = parameter['models']
@@ -136,7 +139,7 @@ elif run_type == 'su' or run_type == 'sc':
 
     if is_plot_data:
         # ----- Plotting Results ----- #
-        surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter)
+        surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)))
         plot_smc_timings(smc_results, output_plots, is_title=False)
         plot_smc_r2score_and_errors(smc_results, output_parameter, output_plots, metrics=metrics, average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
         plot_smc_r2score_and_errors(smc_results, output_parameter, output_plots, metrics=metrics, average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True)
@@ -217,6 +220,7 @@ elif run_type == 'ps':
         data_path = parameter['data_path']
         input_parameter = parameter['input_parameter']
         output_parameter = parameter['output_parameter']
+        output_units = parameter['output_units']
         output_parameter_sa_plot = parameter['output_parameter_sa_plot']
         output_data = './output_data/' + parameter['output_name'] + '/'
         output_plots = output_data + 'Plots/'
@@ -245,7 +249,7 @@ elif run_type == 'ps':
     print(y_df.columns)
     plot_feature_distribution(y_df[output_parameter_sa_plot], output_plots, num_bins=10, is_title=False, title="Output_Distribution", num_subplots_in_row=4, figure_size='small')
     show_plots()
-    surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, is_title=False, title="Actual_vs_Predicted")
+    surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)), is_title=False, title="Actual_vs_Predicted")
     show_plots()
     plot_feature_scatterplot(pd.concat([X_df, y_df], axis=1), input_parameter, output_parameter_sa_plot, output_plots, is_title=False, title="Scatterplot Input Output")
     show_plots()

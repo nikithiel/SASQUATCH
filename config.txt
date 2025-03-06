@@ -1,23 +1,23 @@
 # [da] Data Analysis - [su] Surrogate Model Comparison - [sa] Sensitivity Analysis - [uq] Uncertainty Quantification - [ps] Project Specific
-run_type da
+run_type su
 
 # Data
-data_path Data_example.csv
-output_parameter WSS Eloss Ekin TVPG # wss-1 wss-2 # wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
-input_parameter y z alpha R
-output_parameter_sa_plot WSS Eloss Ekin TVPG
-output_name example
+data_path Data_Hypotension_2000.csv
+output_parameter CO MAP PP
+output_parameter_sa_plot CO MAP PP
+output_units L/min mmHg mmHg
+input_parameter Rmc Emaxlv TBV bpm
+input_units mmHg*s/mL mmHg/mL mL 1/min
+output_name Hypotension
 
 is_transient False
-lower_bound 720
-upper_bound 1200
 normalize False
 scaler none
 save_data data_all.csv
-get_mean_of_each_input_pair True
+get_mean_of_each_input_pair False
 
 # Models
-models NIPCE GP LR RF KNN # Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree
+models NIPCE # GP LR RF KNN Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree
 NIPCE_order 1 2 3 4
 
 # Training and Testing

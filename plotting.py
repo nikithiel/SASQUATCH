@@ -3,8 +3,10 @@ import matplotlib
 matplotlib.use("QtAgg")
 import seaborn as sns
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.gridspec as gridspec
 import os
 from sklearn.multioutput import MultiOutputRegressor
 from matplotlib.ticker import FormatStrFormatter
@@ -16,7 +18,7 @@ from sklearn.metrics import r2_score
 from statsmodels.multivariate.manova import MANOVA
 
 ######### THESIS SPECIFIC #########
-thesis = True
+thesis = False
 units_out = ['Pa', r'Pa m$^3$', r'Pa m$^3$', 'Pa']
 units_out_all = ['Pa', r'Pa m$^3$', r'Pa m$^3$', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa']
 units_in = ['mm','mm','°','mm']
@@ -53,7 +55,7 @@ plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
 plt.rcParams['font.size'] = 11
 
-def plot_smc_r2score_and_errors(df, output_parameter, output_path, metrics=['r2_score', 'RMSE', 'MAPE'], \
+def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=None, metrics=['r2_score', 'RMSE', 'MAPE'], \
                                 is_title=True, title="Surrogate Model Comparison Plots", average_output=False, rmse_log_scale=False, figure_size = (6.5,4)):
     """Plots and saves the R2 score and Errors.
 
@@ -186,19 +188,22 @@ def plot_densitys(X_dict, Y_dict, output_path, lables=None, is_title=True, title
     plt.tight_layout()
     save_plot(plt, output_path+title)
 
-def plot_feature_distribution(df, output_path, num_bins=10, is_title=True, title="Plot of Feature Distributions", num_subplots_in_row=3, figure_size='large'):
+def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, is_title=True, title="Plot of Feature Distributions", num_subplots_in_row=3, figure_size='large'):
     """Plots and saves the distribution of each feature of the dataFrame.
 
     Args:
         - df: dataFrame -> contains data
         - output_path: str -> path to save the plot
+        - output_units: dict -> dictionary of units for each output parameter
         - num_bins: int -> number of bins
         - title: str -> title of plot / name of saved figure
     """
+
     if figure_size == 'large':
         fig_size=(6.5,9)
     elif figure_size == 'small':
         fig_size=(6.5,4)
+
     num_columns = df.select_dtypes(include=['float64', 'int64']).columns
     num_plots = len(num_columns)
     num_cols = (num_plots - 1) // num_subplots_in_row + 1  # Calculate the number of rows needed
@@ -206,13 +211,17 @@ def plot_feature_distribution(df, output_path, num_bins=10, is_title=True, title
 
     fig, axes = plt.subplots(num_cols, num_rows, figsize=fig_size)
     axes = axes.flatten()
+
     for i, col in enumerate(num_columns):
         axes[i].hist(df[col], bins=num_bins)
-        if thesis:# and i!=1:
-            axes[i].set_xlabel(output_dict[col]+" in "+units_out_all[i], labelpad=12)
+
+        if output_units is not None and col in output_units:
+            xlabel = f"{col} in {output_units[col]}"
+            axes[i].set_xlabel(xlabel, labelpad=12)
         else:
             axes[i].set_xlabel(col)
-        if i%num_rows == 0: axes[i].set_ylabel('Frequency')
+        if i % num_rows == 0:
+            axes[i].set_ylabel('Frequency')
 
     # Hide unused subplots
     for j in range(num_plots, len(axes)):
@@ -286,46 +295,101 @@ def plot_data(X_df, y_df, output_path, is_title=True, title="Pairplot of Data"):
     sns.pairplot( pd.concat([X_df, y_df], axis=1))
     save_plot(plt, output_path + title)
 
-def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_parameter, is_title=True, title="Surrogate Model Comparison"):
+def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_parameter, output_units, is_title=True, title="Surrogate Model Comparison"):
     """Plots and saves the model comparison (actual vs predicted).
 
     Args:
-        - models: dict -> contains the models
-        - X_df: dataFrame -> contains input data
-        - y_df: dataFrame -> contains output data
-        - output_path: str -> path to save the plot
-        - title: str -> title of plot / name of saved figure
+        models (dict): Contains the models.
+        X_df (DataFrame): Input data.
+        y_df (DataFrame): Output data.
+        output_path (str): Path to save the plot.
+        output_parameter: List (or similar) containing output column names.
+        output_units (dict): Dictionary containing units for each output parameter.
+        is_title (bool): Whether to show a title on each subplot.
+        title (str): Overall title of the plot / name of saved figure.
     """
-    # determine subfigure order
-    num_output_parameters = len(output_parameter)#y_df.shape[1]#
-    num_rows = 2
-    num_cols = 2
-    if num_output_parameters > 4:
-        num_cols = (num_output_parameters + 1) // 2
-    
-    fig, axs = plt.subplots(num_rows, num_cols, figsize=(6.5, 5))
-    axs = axs.flatten()
 
-    for i, output_name in enumerate(y_df[output_parameter].columns):
+    # Determine number of outputs
+    output_columns = y_df[output_parameter].columns
+    n = len(output_columns)
+    
+    if n == 1:
+        fig, ax = plt.subplots(figsize=(6.5, 5))
+        axs = [ax]
+        nrows = 1
+    else:
+        nrows = math.ceil(n / 2)
+        fig, axs_array = plt.subplots(nrows, 2, figsize=(6.5, 5 * nrows / 2))
+        axs = list(axs_array.flatten())
+    
+    # Plot each output
+    for i, output_name in enumerate(output_columns):
         for model_name, model in models.items():
             fitted_model = MultiOutputRegressor(model).fit(X_df, y_df)
             y_pred_array = fitted_model.predict(X_df)
             y_pred = pd.DataFrame(y_pred_array, columns=y_df.columns)
-            axs[i].scatter(y_df.iloc[:, i], y_pred.iloc[:, i], label=model_name, marker='o', s=8)
+            axs[i].scatter(y_df.iloc[:, i], y_pred.iloc[:, i],
+                           label=model_name, marker='o', s=8)
+        axs[i].plot(y_df.iloc[:, i], y_df.iloc[:, i],
+                    label='Actual', c='black', linewidth=1.0)
+        
+        # Label axes: bottom row gets the x-label; left column gets the y-label
+        row, col = divmod(i, 2)
 
-        axs[i].plot(y_df.iloc[:, i], y_df.iloc[:, i], label='Actual', c='green', linewidth=0.5)
-        if i in [2,3]: axs[i].set_xlabel('Actual Values')
-        if i in [0,2]: axs[i].set_ylabel('Predicted Values')
-        if thesis:
-            axs[i].set_title(f'{output_name} in '+units_out[i])
+        # For even number of outputs, only the bottom row (row == nrows - 1) gets the xlabel
+        # For odd number of outputs, both the last row and the row above it (if any) get the xlabel
+        if n % 2 == 0:
+            if row == nrows - 1:
+                axs[i].set_xlabel('Actual Values')
         else:
-            axs[i].set_title(f'{output_name}')
+            if nrows > 1:
+                if row >= nrows - 2:
+                    axs[i].set_xlabel('Actual Values')
+            else:
+                axs[i].set_xlabel('Actual Values')
+                
+        # The y-label is set for the left column
+        if col == 0:
+            axs[i].set_ylabel('Predicted Values')
+            
+        if is_title:
+            axs[i].set_title(f'{output_name} in {output_units[output_name]}')
 
         axs[i].grid(False)
     
+    # For odd number of outputs (n > 1), remove the extra axis
+    if n % 2 == 1 and n > 1:
+        extra_axis = axs.pop()
+        extra_axis.remove()
+    
+    # Reserve more space on the right for the legend
+    # The rect parameter (left, bottom, right, top) here reserves only 75% of the width for subplots
+    plt.tight_layout(rect=[0, 0, 0.83, 1])
+    
+    # Re-center the last subplot if n is odd
+    if n % 2 == 1 and n > 1:
+        last_axis = axs[-1]
+        pos = last_axis.get_position()
+        # Use the current subplot area margins to compute the center
+        subplot_left = fig.subplotpars.left
+        subplot_right = fig.subplotpars.right
+        center = (subplot_left + subplot_right) / 2
+        new_x0 = center - pos.width / 2
+        last_axis.set_position([new_x0, pos.y0, pos.width, pos.height])
+    
+    # Place the legend
+    # Use the top-right axis from the first row (if available) as a reference
+    if n > 1:
+        top_right = axs[1]
+    else:
+        top_right = axs[0]
+    pos_top_right = top_right.get_position()
+    # Increase the horizontal offset for more legend width
+    legend_x = pos_top_right.x1  
+    legend_y = pos_top_right.y1 + 0.015
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left')
-    plt.tight_layout()
+    fig.legend(handles, labels, bbox_to_anchor=(legend_x, legend_y), loc='upper left')
+    
     save_plot(plt, output_path + title)
 
 def show_plots():
