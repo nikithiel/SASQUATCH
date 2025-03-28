@@ -60,9 +60,10 @@ Here is a short description:
 | data_path | `data_df.scv` *or* `../03_Results` | .xlsx, .csv, and ansys .out files |
 | input_parameter | `y z alpha` | use column names of .csv/.xlsx |
 | input_units | `mm mm °` | units of input parameter |
+| input_parameter_label | `$y_d$ $z_d$ $\alpha$ $R_L$` | specify if you want labels that differ from input parameter names in .csv |
 | output_parameter | `energy-loss wss` | use column names of .csv/.xlsx |
 | output_units | `Pa m^3 Pa` | units of output parameter |
-| output_parameter _sa_plot | `Energy_loss WSS` | names for the outputs |
+| output_parameter_label | `Eloss WSS` | specify if you want labels that differ from output parameter names in .csv |
 | output_name | example | define the name of the output folder |
 | is_transient | `True` | whether data is transient or not. Reduced data saved in `test_after_prep.csv` |
 | lower_bound | `720` | lower bound of time steps to keep |
@@ -109,7 +110,9 @@ Here is a short description:
 | sa_17_segment_model | `NIPCE` | Defiens the model for segment plot |
 | sa_sample_size | `512` | sample size for SA |
 | sa_output_parameter | `WSS Eloss ...` | defines the output parameter for SA calculation |
-| output_parameter_sa_plot | `WSS Eloss ...`| defines outputs for plotting |
+| output_parameter_sa_plot | `WSS Eloss ...`| defines output parameters for plotting in GSA |
+| output_units_sa_plot | `Pa m^3 Pa` | units of output parameter for plotting in GSA |
+| output_parameter_sa_plot_label | `WSS Eloss ...` | specify if you want labels that differ from output parameter names in .csv |
 ### Project specific
 Here you can add your project specific settings. In case of the *Mitral Valve Uncertainty Quantification* they're the following
 

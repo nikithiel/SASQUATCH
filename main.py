@@ -41,7 +41,7 @@ print()
 warnings.filterwarnings("ignore") # ignores warnings
 
 # Reading user defined hyper parameter
-parameter = read_user_defined_parameters('config.txt')
+parameter = read_user_defined_parameters('configMVUQ.txt')
 
 run_type = parameter['run_type']
 
@@ -61,10 +61,8 @@ if run_type == 'da':
         scaler = parameter['scaler']
         get_mean = parameter['get_mean_of_each_input_pair']
         is_transient = parameter['is_transient']
-   
-        if is_transient == False:
-            lower_bound = parameter.get('lower_bound', None)
-            upper_bound = parameter.get('upper_bound', None)
+        lower_bound = parameter.get('lower_bound', None)
+        upper_bound = parameter.get('upper_bound', None)
  
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
@@ -107,10 +105,8 @@ elif run_type == 'su' or run_type == 'sc':
         get_mean = parameter['get_mean_of_each_input_pair']
         metrics = parameter['metrics']
         is_transient = parameter['is_transient']
-   
-        if is_transient == False:
-            lower_bound = parameter.get('lower_bound', None)
-            upper_bound = parameter.get('upper_bound', None)
+        lower_bound = parameter.get('lower_bound', None)
+        upper_bound = parameter.get('upper_bound', None)
 
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
@@ -168,10 +164,8 @@ elif run_type == 'sa':
         get_mean = parameter['get_mean_of_each_input_pair']
         sample_size = parameter['sa_sample_size']
         is_transient = parameter['is_transient']
-   
-        if is_transient == False:
-            lower_bound = parameter.get('lower_bound', None)
-            upper_bound = parameter.get('upper_bound', None)
+        lower_bound = parameter.get('lower_bound', None)
+        upper_bound = parameter.get('upper_bound', None)
 
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
@@ -218,10 +212,19 @@ elif run_type == 'ps':
     print("Project Specific")
     try:
         data_path = parameter['data_path']
-        input_parameter = parameter['input_parameter']
-        output_parameter = parameter['output_parameter']
-        output_units = parameter['output_units']
-        output_parameter_sa_plot = parameter['output_parameter_sa_plot']
+
+        input_parameter_names = parameter['input_parameter']
+        input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
+        input_parameter_units = parameter['input_units']
+
+        output_parameter_names = parameter['output_parameter']
+        output_parameter_label = parameter.get('output_parameter_label', parameter['output_parameter'])
+        output_parameter_units = parameter['output_units']
+
+        output_parameter_sa_plot_names = parameter['output_parameter_sa_plot']
+        output_parameter_sa_plot_label = parameter.get('output_parameter_sa_plot_label', parameter['output_parameter_sa_plot'])
+        output_parameter_sa_plot_units = parameter['output_units_sa_plot']
+
         output_data = './output_data/' + parameter['output_name'] + '/'
         output_plots = output_data + 'Plots/'
         save_data = parameter['save_data']
@@ -230,28 +233,66 @@ elif run_type == 'ps':
         get_mean = parameter['get_mean_of_each_input_pair']
         model_names = parameter['models']
         is_transient = parameter['is_transient']
-   
-        if is_transient == False:
-            lower_bound = parameter.get('lower_bound', None)
-            upper_bound = parameter.get('upper_bound', None)
+        lower_bound = parameter.get('lower_bound', None)
+        upper_bound = parameter.get('upper_bound', None)
+
+        
+        input_parameter = {
+            param_name: {
+                "label": param_label,
+                "unit": param_unit.replace('*', ' ')
+            }
+            for param_name, param_label, param_unit in zip(
+                input_parameter_names,
+                input_parameter_label,
+                input_parameter_units
+            )
+        }
+        #input_parameter = dict(zip(input_parameter_names, [val.replace('*', ' ') for val in input_parameter_units]))
+
+        output_parameter = {
+            param_name: {
+                "label": param_label,
+                "unit": param_unit.replace('*', ' ')
+            }
+            for param_name, param_label, param_unit in zip(
+                output_parameter_names,
+                output_parameter_label,
+                output_parameter_units
+            )
+        }
+
+        output_parameter_sa_plot = {
+            param_name: {
+                "label": param_label,
+                "unit": param_unit.replace('*', ' ')
+            }
+            for param_name, param_label, param_unit in zip(
+                output_parameter_sa_plot_names,
+                output_parameter_sa_plot_label,
+                output_parameter_sa_plot_units
+            )
+        }
+        #output_parameter_sa_plot = dict(zip(output_parameter_sa_plot_names, [val.replace('*', ' ') for val in output_parameter_sa_plot_units]))
 
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
     
     df = read_data(data_path, output_data, da=True, save_data=save_data)
-    X_df, y_df = preprocessing(df=df, input_parameter=input_parameter, output_parameter=output_parameter, \
+    X_df, y_df = preprocessing(df=df, input_parameter=input_parameter_names, output_parameter=output_parameter_names, \
                                 output_path=output_data, normalize=normalize, scaler=scaler, get_mean=get_mean, \
                                 is_transient=is_transient, lower_bound=lower_bound, upper_bound=upper_bound)
         
     input_bounds = get_data_bounds(X_df)
     models, model_names = creatingModels(model_names, input_bounds, parameter)
-    print("  Creating Models: Done : ",model_names)
+    print("  Creating Models: Done : ", model_names)
     print(y_df.columns)
-    plot_feature_distribution(y_df[output_parameter_sa_plot], output_plots, num_bins=10, is_title=False, title="Output_Distribution", num_subplots_in_row=4, figure_size='small')
+    #plot_feature_distribution(y_df[output_parameter_sa_plot], output_plots, num_bins=10, is_title=False, title="Output_Distribution", num_subplots_in_row=4, figure_size='small')
     show_plots()
-    surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)), is_title=False, title="Actual_vs_Predicted")
+    #surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)), is_title=False, title="Actual_vs_Predicted")
     show_plots()
-    plot_feature_scatterplot(pd.concat([X_df, y_df], axis=1), input_parameter, output_parameter_sa_plot, output_plots, is_title=False, title="Scatterplot Input Output")
+    plot_feature_scatterplot(pd.concat([X_df, y_df], axis=1), input_parameter, output_parameter_sa_plot, 
+                             output_plots, fig_size=(17.5/2.54, 17.5/2.54), is_title=False, title="Scatterplot Input Output")
     show_plots()
 
 # Sensitivity analysis bounds or uncertainty quantification
@@ -261,7 +302,9 @@ elif run_type == 'uq':
     try:
         data_path = parameter['data_path']
         input_parameter = parameter['input_parameter']
+        input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
         output_parameter = parameter['sa_output_parameter']
+        output_parameter_label = parameter.get('output_parameter_label', parameter['sa_output_parameter'])
         output_data = './output_data/' + parameter['output_name'] + '/'
         output_plots = output_data + 'Plots/'
         model_names_input = parameter['sa_models']
@@ -274,13 +317,13 @@ elif run_type == 'uq':
         get_mean = parameter['get_mean_of_each_input_pair']
         sample_size = parameter['sa_sample_size']
         is_transient = parameter['is_transient']
-   
-        if is_transient == False:
-            lower_bound = parameter.get('lower_bound', None)
-            upper_bound = parameter.get('upper_bound', None)
+        lower_bound = parameter.get('lower_bound', None)
+        upper_bound = parameter.get('upper_bound', None)
             
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
+
+    
     
     # ----- DATA Preprocessing ----- #
     df = read_data(data_path, output_data, da=True, save_data=save_data)
@@ -300,7 +343,7 @@ elif run_type == 'uq':
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #  
-    the_model = 'NIPCE'      
+    the_model = sa_17_segment_model.replace('_',' ')      
     uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_bounds(X_df=X_df, y_df=y_df, models=models, sa_input_bounds=input_bounds, sample_size=sample_size, input_metric=metric, sa_input_initial_dict=sa_input_initial_dict, model=the_model)
     print("  Perform SA: Done")
 
@@ -347,8 +390,8 @@ elif run_type == 'uq':
     to_plot_dict['Ekin']['numbers'] = [2]
     to_plot_dict['Ekin']['names'] = ['Ekin']
 
-    bounds_sobol(uncertainty_sobol_dict, output_plots, model_name = the_model, sobol_index='ST', is_title=False, title=title+"_Bounds_sobol_allinone", \
-                 x_annot=x_annot, y_annot="Sensitivity")
+    bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(output_parameter, output_parameter_label)), model_name = the_model, sobol_index='ST', 
+                 fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=False, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
     
     bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \
                     model=the_model, is_title=False, title=title+"_bounds_std_region_allinone_nolegend_"+str(metric)+"_"+to_plot, x_annot=x_annot, y_annot="Output Value", \

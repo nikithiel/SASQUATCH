@@ -1,8 +1,8 @@
 # [da] Data Analysis - [su] Surrogate Model Comparison - [sa] Sensitivity Analysis - [uq] Uncertainty Quantification - [ps] Project Specific
-run_type su
+run_type da
 
 # Data
-data_path Data_Hypotension_2000.csv
+data_path Data_Hypotension_1000_2.csv
 output_parameter CO MAP PP
 output_parameter_sa_plot CO MAP PP
 output_units L/min mmHg mmHg

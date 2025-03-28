@@ -7,6 +7,8 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.gridspec as gridspec
+import matplotlib.ticker as mticker
+from matplotlib.ticker import ScalarFormatter
 import os
 from sklearn.multioutput import MultiOutputRegressor
 from matplotlib.ticker import FormatStrFormatter
@@ -18,7 +20,7 @@ from sklearn.metrics import r2_score
 from statsmodels.multivariate.manova import MANOVA
 
 ######### THESIS SPECIFIC #########
-thesis = False
+thesis = True
 units_out = ['Pa', r'Pa m$^3$', r'Pa m$^3$', 'Pa']
 units_out_all = ['Pa', r'Pa m$^3$', r'Pa m$^3$', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa']
 units_in = ['mm','mm','°','mm']
@@ -51,9 +53,15 @@ output_dict = {
     'wss-16': r'WSS$_{16}$',
     'wss-17': r'WSS$_{17}$'
 }
+
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
-plt.rcParams['font.size'] = 11
+plt.rcParams['font.size'] = 10
+
+class ScalarFormatterForceFormat(ScalarFormatter):
+    def _set_format(self, vmin=None, vmax=None):
+        
+        self.format = "%1.1f"  # Force one decimal place in the tick labels.
 
 def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=None, metrics=['r2_score', 'RMSE', 'MAPE'], \
                                 is_title=True, title="Surrogate Model Comparison Plots", average_output=False, rmse_log_scale=False, figure_size = (6.5,4)):
@@ -231,7 +239,7 @@ def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, i
     plt.tight_layout()
     save_plot(plt, output_path + title)
 
-def plot_feature_scatterplot(df, x_cols, y_cols, output_path, is_title=True, title="Scatterplot"):
+def plot_feature_scatterplot(df, x_cols, y_cols, output_path, fig_size=(6.5, 6.5), is_title=True, title="Scatterplot"):
     """Plots and saves scatterplot of two columns from the DataFrame.
     
     Args:
@@ -241,20 +249,57 @@ def plot_feature_scatterplot(df, x_cols, y_cols, output_path, is_title=True, tit
         - output_path: str -> path to save the plot
         - title: str -> title of plot
     """
+
     n_plots = len(x_cols) * len(y_cols)
-    fig, axes = plt.subplots(len(y_cols), len(x_cols), figsize=(6.5, 6.5))
+
+    plt.rcParams['mathtext.fontset'] = 'stix'
+    plt.rcParams['font.family'] = 'STIXGeneral'
+    plt.rcParams['font.size'] = 10
+
+    fig, axes = plt.subplots(len(y_cols), len(x_cols), figsize=fig_size)
+
     for i, y_col in enumerate(y_cols):
+
+        # Create mask for quantifying outliers based on 1.5 IQR
+        y_data = df[y_col].dropna()
+
+        # Get exponent for custom ScalarFormatter of the y-axis.
+        if not y_data.empty:
+            median_val = np.median(y_data)
+            # Avoid log10(0) and compute exponent from absolute median value
+            exponent = int(np.floor(np.log10(np.abs(median_val)))) if median_val != 0 else 0
+        else:
+            exponent = 0  # Default exponent if no data
+
+        Q1 = y_data.quantile(0.25)
+        Q3 = y_data.quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        
+        outlier_mask = (df[y_col] < lower_bound) | (df[y_col] > upper_bound)
+
         for j, x_col in enumerate(x_cols):
             ax = axes[i, j] if n_plots > 1 else axes
-            ax.scatter(df[x_col], df[y_col], s=8)
-            if thesis:
-                if i == len(x_cols)-1: ax.set_xlabel(input_dict[x_col]+" in "+units_in[j])
-                if j == 0: ax.set_ylabel(y_col+" in "+units_out[i])
-            else:
-                if i == len(x_cols)-1: ax.set_xlabel(input_dict[x_col])
-                if j == 0: ax.set_ylabel(y_col)
+
+            inliers_df = df[~outlier_mask]
+            outliers_df = df[outlier_mask]
+
+            ax.scatter(inliers_df[x_col], inliers_df[y_col],
+                       s=8, label='Inliers')
+            ax.scatter(outliers_df[x_col], outliers_df[y_col],
+                       s=8, c='orange', label='Outliers')
+
+            if i == len(x_cols)-1: ax.set_xlabel(x_cols[x_col]['label'] + " in " + x_cols[x_col]['unit'])
+            if j == 0: ax.set_ylabel(y_cols[y_col]['label'] + " in " + y_cols[y_col]['unit'])
+      
             if is_title:
-                ax.set_title(f"{title} - {input_dict[x_col]} vs {y_col}")
+                ax.set_title(f"{title} - {x_cols[x_col]['label']} vs {y_cols[y_col]['label']}")
+
+            # Apply the custom ScalarFormatter to the y-axis.
+            formatter = ScalarFormatterForceFormat()
+            formatter.set_powerlimits((0, 0))
+            ax.yaxis.set_major_formatter(formatter)
 
     plt.tight_layout()
     save_plot(plt, output_path + title)
@@ -656,22 +701,27 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
     plt.tight_layout()
     save_plot(plt, output_path + title + "_" + model + "_" + annotation)
 
-def bounds_sobol(data, output_path, output='None',model_name='GP', sobol_index='ST', inputs = ['y', 'z', 'alpha', 'R'], is_title=True, title="Bounds sobol", x_annot="Input Variation", y_annot="Sensitivity"):    
+def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP', sobol_index='ST', 
+                 fig_size=(6.5, 9), font_size=10, is_title=True, title="Bounds sobol", x_annot="Input Variation", y_annot="Sensitivity"):    
+    
+    plt.rcParams['mathtext.fontset'] = 'stix'
+    plt.rcParams['font.family'] = 'STIXGeneral'
+    plt.rcParams['font.size'] = font_size
+    
     uncertainty_values_to_plot = list(data.keys())  # Uncertainty values to plot
-    outputs = list(data[uncertainty_values_to_plot[0]][model_name].keys())
-    if thesis:
-        for i, input in enumerate(inputs):
-            inputs[i] = input_dict[input]
+    output_names = list(data[uncertainty_values_to_plot[0]][model_name].keys())
+    
     num_cols = 3
-    num_rows = (len(outputs) + 2) // num_cols  # Determine number of rows for subplots
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(6.5, 9))
+    num_rows = (len(output_names) + 2) // num_cols  # Determine number of rows for subplots
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=fig_size)
     plt.subplots_adjust(bottom=0.1, 
                     left=0.1, 
                     top = 0.975, 
                     right=0.975, hspace=0.7)
     transformation = [3, 0, 13, 17, 18, 20, 7, 8, 9, 16, 1, 2, 11, 10, 19, 4, 12, 14, 15, 5, 6]
-    outputs_transformed = [outputs[i] for i in transformation]
-    for i, output in enumerate(outputs):
+    outputs_transformed = [output_names[i] for i in transformation]
+    
+    for i, output in enumerate(output_names):
         row = i // num_cols
         col = i % num_cols
         ax = axes[row, col] if num_rows > 1 else axes[col]
@@ -683,15 +733,15 @@ def bounds_sobol(data, output_path, output='None',model_name='GP', sobol_index='
 
         # Plotting
         ax.plot(uncertainty_values_to_plot, sobol_values, marker='o', markersize = 3, linewidth=2)
-        ax.set_title(output_dict[output])
-        if i%num_cols == 0: ax.set_ylabel(sobol_index)
+        ax.set_title(output_labels[output], fontsize=font_size)
+        if i%num_cols == 0: ax.set_ylabel(f"S$_{{{sobol_index[-1]}}}$")
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.1f}'.format(x)))
         if round((i-1)/num_cols) == num_rows-1: ax.set_xlabel("Variation in mm")
         #if round((i-1)/num_cols) == num_rows-1: ax.set_xlabel(" ")
         ax.grid(True)
     
-    fig.legend(labels=inputs, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(inputs))
-    plt.suptitle(title if is_title else None)
+    fig.legend(labels=input_labels, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(input_labels))
+    plt.suptitle(title if is_title else None, fontsize=font_size)
     #plt.tight_layout()#h_pad=0, w_pad=0)
     save_plot(plt, output_path + title + '_' + model_name + '_' + sobol_index)
     plt.show()
