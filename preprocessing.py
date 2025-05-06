@@ -178,12 +178,40 @@ def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_pa
 
     return X_df, y_df
 
-def preprocessing(df, **kwargs):
+def preprocessing(da=False, **kwargs):
     '''
-    New and refactored preprocessig function.
+    New ,refactored preprocessing function combined with the read_data().
+    Reads the data and returns both input and output data as dataframes.
+    Args:
+        - df: dataFrame -> contains data
+        - da: bool -> whether data analysis is running
+        - kwargs: dict -> additional parameters for preprocessing
+    Returns:
+        - X_df: dataFrame -> preprocessed input data
+        - y_df: dataFrame -> preprocessed output data
     '''
+    
+    data_path = f"input_data/" + kwargs['data_path']
+    output_path = './output_data/' + kwargs['output_name'] + '/'
+
+    if ".xlsx" in data_path: data_df_all = pd.read_excel(data_path) # xlsx files
+    if ".csv" in data_path: data_df_all = pd.read_csv(data_path) # csv files
+    else: data_df_all = read_ansys_output_to_dfs(data_path, da=da) # Ansys Output Files
+    
+    # Saving data
+    if kwargs['save_data'].lower() != 'false':
+        # Check directory and creating directory if necessary
+        directory = os.path.dirname(output_path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        data_df_all.to_csv(output_path + "/" + kwargs['save_data'], index=False)
+    
+    df = data_df_all.copy()
+    
     lower_bound = kwargs.get('lower_bound', None)
     upper_bound = kwargs.get('upper_bound', None)
+
     if kwargs['is_transient']:
         # Filter for transient data based on time steps.
         column_name = "Time Step"

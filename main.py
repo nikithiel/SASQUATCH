@@ -42,26 +42,27 @@ warnings.filterwarnings("ignore") # ignores warnings
 
 # Reading user defined hyper parameter
 parameter = read_user_defined_parameters('configMVUQ.txt')
+showplot = False #set to True to show plots, this speeds up the process
 
 run_type = parameter['run_type']
 
 if run_type == 'da':
     print("Analyze Data\n------------")
     
-    df = read_data(parameter['data_path'], parameter['output_name'], da=True, save_data=parameter['save_data'])
-    X_df, y_df = preprocessing(df, **parameter)
+    #df = read_data(parameter['data_path'], parameter['output_name'], da=True, save_data=parameter['save_data'])
+    X_df, y_df = preprocessing(da=True, **parameter)
     
     output_plots = './output_data/' + parameter['output_name'] + '/' + 'Plots/'
     plot_correlation(X_df, y_df, output_plots)
-    show_plots()
+    show_plots() if showplot else None
     plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter")
-    show_plots()
+    show_plots() if showplot else None
     plot_feature_distribution(y_df, output_plots, dict(zip(parameter['output_parameter'], parameter['output_units'])), num_bins=20, title="Distribution of Output Parameter")
-    show_plots()
+    show_plots() if showplot else None
     plot_data(X_df, y_df, output_plots)
-    show_plots()
+    show_plots() if showplot else None
     actual_scatter_plot(X_df, y_df, output_plots)
-    show_plots()
+    show_plots() if showplot else None
     print("Analyze Data: Done")
 
 elif run_type == 'su' or run_type == 'sc':
