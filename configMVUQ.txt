@@ -1,5 +1,5 @@
 # [da] Data Analysis - [su] Surrogate Model Comparison - [sa] Sensitivity Analysis - [uq] Uncertainty Quantification - [ps] Project Specific
-run_type uq
+run_type da
 
 # Data
 data_path Data_example.csv
@@ -17,7 +17,7 @@ upper_bound 1200
 normalize False
 scaler none
 save_data data_all.csv
-get_mean_of_each_input_pair True
+get_mean True #formerly get_mean_of_each_input_pair
 
 # Models
 models NIPCE GP LR RF KNN # Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree

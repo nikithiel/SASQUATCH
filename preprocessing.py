@@ -127,10 +127,10 @@ def read_input_parameter(subfolder_string):
         dict[key] = value
     return dict
 
-def preprocessing(**args):
+'''def preprocessing(**args):
     """Wrapper for project specific preprocessing.
     """
-    return mv_uq_procect_preprocessing(**args)
+    return mv_uq_procect_preprocessing(**args)'''
     
 def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, \
                                 normalize=False, scaler='none', get_mean=False,
@@ -175,5 +175,35 @@ def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_pa
     # split df into input and output
     X_df = data_df[input_parameter]
     y_df = data_df[output_parameter]
+
+    return X_df, y_df
+
+def preprocessing(df, **kwargs):
+    '''
+    New and refactored preprocessig function.
+    '''
+    lower_bound = kwargs.get('lower_bound', None)
+    upper_bound = kwargs.get('upper_bound', None)
+    if kwargs['is_transient']:
+        # Filter for transient data based on time steps.
+        column_name = "Time Step"
+        df = df[(df[column_name] >= kwargs['lower_bound']) & (df[column_name] <= kwargs['upper_bound'])]
+        df.to_csv(kwargs['output_name'] + "/test_after_prep.csv", index=False)
+        
+    if kwargs['normalize']:
+        df = normalize_data(df)
+        
+    if kwargs['scaler'] != 'none':
+        df = scale_data(df, kwargs['scaler'])
+    
+    if kwargs['get_mean']:
+        data_df = mean_of_timesteps(df, kwargs['input_parameter'])
+    else:
+        data_df = df
+        
+    data_df.to_csv(kwargs['output_name'] + "/reduced_data.csv")
+    
+    X_df = data_df[kwargs['input_parameter']]
+    y_df = data_df[kwargs['output_parameter']]
 
     return X_df, y_df

@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib
-matplotlib.use("QtAgg")
+#matplotlib.use("QtAgg")
+#matplotlib.use('Qt5Agg')
 import seaborn as sns
 import numpy as np
 import math
@@ -154,13 +155,13 @@ def plot_densitys(X_dict, Y_dict, output_path, lables=None, is_title=True, title
     Args:
         - X_dict: dict -> Dictionary containing arrays for each model's test results
         - Y_dict: dict -> Dictionary containing labels for each model
-        - output_path: str -> path to save the plot
+        - output_path: str -> Path to save the plot
         - is_title: bool -> Whether to display the title
         - title: str -> Title of the plot / name of the saved figure
     """
     num_models = len(Y_dict)
     num_plots = len(Y_dict[list(Y_dict.keys())[0]][0])  # Assuming all models have the same number of columns
-    num_cols = min(num_plots, 3)   # Limit the number of columns to
+    num_cols = min(num_plots, 3)   # Limit the number of columns
     num_rows =  (num_plots - 1) // num_cols + 1 # Calculate the number of rows needed
     num_models
     fig, axes = plt.subplots(num_rows, num_cols, figsize=(6.5, 9))
@@ -256,7 +257,7 @@ def plot_feature_scatterplot(df, x_cols, y_cols, output_path, fig_size=(6.5, 6.5
     plt.rcParams['font.family'] = 'STIXGeneral'
     plt.rcParams['font.size'] = 10
 
-    fig, axes = plt.subplots(len(y_cols), len(x_cols), figsize=fig_size)
+    _, axes = plt.subplots(len(y_cols), len(x_cols), figsize=fig_size)
 
     for i, y_col in enumerate(y_cols):
 

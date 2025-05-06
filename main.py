@@ -19,7 +19,7 @@ import pandas as pd
 from initialization import read_user_defined_parameters, read_data, get_data_bounds
 from preprocessing import preprocessing
 from models import creatingModels
-from surrogate_model_comparision import kFold_Evaluation, train_and_save_models
+from surrogate_model_comparison import kFold_Evaluation, train_and_save_models
 from plotting import plot_smc_timings, plot_smc_r2score_and_errors, plot_data
 from plotting import surrogate_model_predicted_vs_actual, show_plots, plot_sa_results_heatmap
 from plotting import plot_sa_results_17_segments, plot_boxplots, plot_correlation
@@ -47,35 +47,16 @@ run_type = parameter['run_type']
 
 if run_type == 'da':
     print("Analyze Data\n------------")
-    # ----- Initialize Hyperparameter ----- #
-    try:
-        data_path = parameter['data_path']
-        input_parameter = parameter['input_parameter']
-        input_units = parameter['input_units']
-        output_parameter = parameter['output_parameter']
-        output_units = parameter['output_units']
-        output_data = './output_data/' + parameter['output_name'] + '/'
-        output_plots = output_data + 'Plots/'
-        save_data = parameter['save_data']
-        normalize = parameter['normalize']
-        scaler = parameter['scaler']
-        get_mean = parameter['get_mean_of_each_input_pair']
-        is_transient = parameter['is_transient']
-        lower_bound = parameter.get('lower_bound', None)
-        upper_bound = parameter.get('upper_bound', None)
- 
-    except Exception:
-        print("!!! Error: Parameter in config.txt file missing !!!")
     
-    df = read_data(data_path, output_data, da=True, save_data=save_data)
-    X_df, y_df = preprocessing(df=df, input_parameter=input_parameter, output_parameter=output_parameter, \
-                                output_path=output_data, normalize=normalize, scaler=scaler, get_mean=get_mean, \
-                                is_transient=is_transient, lower_bound=lower_bound, upper_bound=upper_bound)
+    df = read_data(parameter['data_path'], parameter['output_name'], da=True, save_data=parameter['save_data'])
+    X_df, y_df = preprocessing(df, **parameter)
+    
+    output_plots = './output_data/' + parameter['output_name'] + '/' + 'Plots/'
     plot_correlation(X_df, y_df, output_plots)
     show_plots()
     plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter")
     show_plots()
-    plot_feature_distribution(y_df, output_plots, dict(zip(output_parameter, output_units)), num_bins=20, title="Distribution of Output Parameter")
+    plot_feature_distribution(y_df, output_plots, dict(zip(parameter['output_parameter'], parameter['output_units'])), num_bins=20, title="Distribution of Output Parameter")
     show_plots()
     plot_data(X_df, y_df, output_plots)
     show_plots()
@@ -88,10 +69,6 @@ elif run_type == 'su' or run_type == 'sc':
 
     # ----- Initialize Hyperparameter ----- #
     try:
-        data_path = parameter['data_path']
-        input_parameter = parameter['input_parameter']
-        output_parameter = parameter['output_parameter']
-        output_units = parameter['output_units']
         output_data = './output_data/' + parameter['output_name'] + '/'
         output_plots = output_data + 'Plots/'
         model_names = parameter['models']
@@ -99,12 +76,8 @@ elif run_type == 'su' or run_type == 'sc':
         shuffle = parameter['shuffle']
         random_state = parameter['random_state']
         is_plot_data = parameter['plot_data']
-        save_data = parameter['save_data']
-        normalize = parameter['normalize']
-        scaler = parameter['scaler']
-        get_mean = parameter['get_mean_of_each_input_pair']
         metrics = parameter['metrics']
-        is_transient = parameter['is_transient']
+        
         lower_bound = parameter.get('lower_bound', None)
         upper_bound = parameter.get('upper_bound', None)
 
@@ -112,10 +85,10 @@ elif run_type == 'su' or run_type == 'sc':
         print("!!! Error: Parameter in config.txt file missing !!!")
 
     # ----- DATA Preprocessing ----- #
-    df = read_data(data_path, output_data, da=True, save_data=save_data)
-    X_df, y_df = preprocessing(df=df, input_parameter=input_parameter, output_parameter=output_parameter, \
-                                output_path=output_data, normalize=normalize, scaler=scaler, get_mean=get_mean, \
-                                is_transient=is_transient, lower_bound=lower_bound, upper_bound=upper_bound)
+    df = read_data(parameter['data_path'], output_data, da=True, save_data=parameter['save_data'])
+    X_df, y_df = preprocessing(df=df, input_parameter=parameter['input_parameter'], output_parameter=parameter['output_parameter'], \
+                                output_path=output_data, normalize=parameter['normalize'], scaler=parameter['scaler'], get_mean=parameter['get_mean'], \
+                                is_transient=parameter['is_transient'], lower_bound=lower_bound, upper_bound=upper_bound)
     print("  Data Preprocessing: Done")
 
     # ----- Creating models ----- #
@@ -135,10 +108,10 @@ elif run_type == 'su' or run_type == 'sc':
 
     if is_plot_data:
         # ----- Plotting Results ----- #
-        surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)))
+        surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, parameter['output_parameter'], dict(zip(parameter['output_parameter'], parameter['output_units'])))
         plot_smc_timings(smc_results, output_plots, is_title=False)
-        plot_smc_r2score_and_errors(smc_results, output_parameter, output_plots, metrics=metrics, average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
-        plot_smc_r2score_and_errors(smc_results, output_parameter, output_plots, metrics=metrics, average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True)
+        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=metrics, average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
+        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=metrics, average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True)
         show_plots()
         
         print("  Plotting of smc results: Done")
@@ -149,8 +122,6 @@ elif run_type == 'sa':
 
     # ----- Initialize Hyperparameter ----- #
     try:
-        data_path = parameter['data_path']
-        input_parameter = parameter['input_parameter']
         output_parameter = parameter['sa_output_parameter']
         output_data = './output_data/' + parameter['output_name'] + '/'
         output_plots = output_data + 'Plots/'
@@ -158,12 +129,7 @@ elif run_type == 'sa':
         output_parameter_sa_plot = parameter['output_parameter_sa_plot']
         sa_17_segment_model = parameter['sa_17_segment_model']
         sa_sobol_indice = parameter['sa_sobol_indice']
-        save_data = parameter['save_data']
-        normalize = parameter['normalize']
-        scaler = parameter['scaler']
-        get_mean = parameter['get_mean_of_each_input_pair']
         sample_size = parameter['sa_sample_size']
-        is_transient = parameter['is_transient']
         lower_bound = parameter.get('lower_bound', None)
         upper_bound = parameter.get('upper_bound', None)
 
@@ -172,10 +138,10 @@ elif run_type == 'sa':
     
 
     # ----- DATA Preprocessing ----- #
-    df = read_data(data_path, output_data, da=True, save_data=save_data)
-    X_df, y_df = preprocessing(df=df, input_parameter=input_parameter, output_parameter=output_parameter, \
-                                output_path=output_data, normalize=normalize, scaler=scaler, get_mean=get_mean, \
-                                is_transient=is_transient, lower_bound=lower_bound, upper_bound=upper_bound)
+    df = read_data(parameter['data_path'], output_data, da=True, save_data=parameter['save_data'])
+    X_df, y_df = preprocessing(df=df, input_parameter=parameter['input_parameter'], output_parameter=parameter['sa_output_parameter'], \
+                                output_path=output_data, normalize=parameter['normalize'], scaler=parameter['scaler'], get_mean=parameter['get_mean'], \
+                                is_transient=parameter['is_transient'], lower_bound=lower_bound, upper_bound=upper_bound)
     print("  Data Preprocessing: Done")
 
     # ----- Creating models ----- #
@@ -195,7 +161,7 @@ elif run_type == 'sa':
 
     # ----- Plotting Results ----- #
     Y_dict['Training Data'] = y_df.values
-    plot_densitys(X_dict, Y_dict, output_plots, lables=output_parameter, is_title=False, title="Density plot")
+    plot_densitys(X_dict, Y_dict, output_plots, lables=parameter['sa_output_parameter'], is_title=False, title="Density plot")
     values_list = []
     model_list = []
     for (model, values) in Y_dict.items():
@@ -211,7 +177,6 @@ elif run_type == 'sa':
 elif run_type == 'ps':
     print("Project Specific")
     try:
-        data_path = parameter['data_path']
 
         input_parameter_names = parameter['input_parameter']
         input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
@@ -227,12 +192,8 @@ elif run_type == 'ps':
 
         output_data = './output_data/' + parameter['output_name'] + '/'
         output_plots = output_data + 'Plots/'
-        save_data = parameter['save_data']
-        normalize = parameter['normalize']
-        scaler = parameter['scaler']
-        get_mean = parameter['get_mean_of_each_input_pair']
         model_names = parameter['models']
-        is_transient = parameter['is_transient']
+        
         lower_bound = parameter.get('lower_bound', None)
         upper_bound = parameter.get('upper_bound', None)
 
@@ -278,19 +239,19 @@ elif run_type == 'ps':
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
     
-    df = read_data(data_path, output_data, da=True, save_data=save_data)
+    df = read_data(parameter['data_path'], output_data, da=True, save_data=parameter['save_data'])
     X_df, y_df = preprocessing(df=df, input_parameter=input_parameter_names, output_parameter=output_parameter_names, \
-                                output_path=output_data, normalize=normalize, scaler=scaler, get_mean=get_mean, \
-                                is_transient=is_transient, lower_bound=lower_bound, upper_bound=upper_bound)
+                                output_path=output_data, normalize=parameter['normalize'], scaler=parameter['scaler'], get_mean=parameter['get_mean'], \
+                                is_transient=parameter['is_transient'], lower_bound=lower_bound, upper_bound=upper_bound)
         
     input_bounds = get_data_bounds(X_df)
     models, model_names = creatingModels(model_names, input_bounds, parameter)
     print("  Creating Models: Done : ", model_names)
     print(y_df.columns)
     #plot_feature_distribution(y_df[output_parameter_sa_plot], output_plots, num_bins=10, is_title=False, title="Output_Distribution", num_subplots_in_row=4, figure_size='small')
-    show_plots()
+    #show_plots()
     #surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)), is_title=False, title="Actual_vs_Predicted")
-    show_plots()
+    #show_plots()
     plot_feature_scatterplot(pd.concat([X_df, y_df], axis=1), input_parameter, output_parameter_sa_plot, 
                              output_plots, fig_size=(17.5/2.54, 17.5/2.54), is_title=False, title="Scatterplot Input Output")
     show_plots()
@@ -300,8 +261,7 @@ elif run_type == 'uq':
     print("Uncertainty Quantification")
     # ----- Initialize Hyperparameter ----- #
     try:
-        data_path = parameter['data_path']
-        input_parameter = parameter['input_parameter']
+        
         input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
         output_parameter = parameter['sa_output_parameter']
         output_parameter_label = parameter.get('output_parameter_label', parameter['sa_output_parameter'])
@@ -311,12 +271,8 @@ elif run_type == 'uq':
         output_parameter_sa_plot = parameter['output_parameter_sa_plot']
         sa_17_segment_model = parameter['sa_17_segment_model']
         sa_sobol_indice = parameter['sa_sobol_indice']
-        save_data = parameter['save_data']
-        normalize = parameter['normalize']
-        scaler = parameter['scaler']
-        get_mean = parameter['get_mean_of_each_input_pair']
         sample_size = parameter['sa_sample_size']
-        is_transient = parameter['is_transient']
+        
         lower_bound = parameter.get('lower_bound', None)
         upper_bound = parameter.get('upper_bound', None)
             
@@ -326,10 +282,10 @@ elif run_type == 'uq':
     
     
     # ----- DATA Preprocessing ----- #
-    df = read_data(data_path, output_data, da=True, save_data=save_data)
-    X_df, y_df = preprocessing(df=df, input_parameter=input_parameter, output_parameter=output_parameter, \
-                                output_path=output_data, normalize=normalize, scaler=scaler, get_mean=get_mean, \
-                                is_transient=is_transient, lower_bound=lower_bound, upper_bound=upper_bound)
+    df = read_data(parameter['data_path'], output_data, da=True, save_data=parameter['save_data'])
+    X_df, y_df = preprocessing(df=df, input_parameter=parameter['input_parameter'], output_parameter=parameter['sa_output_parameter'], \
+                                output_path=output_data, normalize=parameter['normalize'], scaler=parameter['scaler'], get_mean=parameter['get_mean'], \
+                                is_transient=parameter['is_transient'], lower_bound=lower_bound, upper_bound=upper_bound)
     sa_input_initial_dict = {'y': -5, 'z': 51, 'alpha': 0, 'R': 3.6} #'alpha': 0,
     metric = 'maximum' # millimeter, percentages, maximum 
     if metric == 'percentages':  
@@ -361,7 +317,7 @@ elif run_type == 'uq':
         y_annot="Output Variation in %"
         title="Input Variation perc of input param range"
 
-    bounds_variation_plot(sa_Y_variation_dict, output_parameter, output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
+    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
 
     to_plot = 'some_segments'
     to_plot_dict = {}
@@ -390,7 +346,7 @@ elif run_type == 'uq':
     to_plot_dict['Ekin']['numbers'] = [2]
     to_plot_dict['Ekin']['names'] = ['Ekin']
 
-    bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(output_parameter, output_parameter_label)), model_name = the_model, sobol_index='ST', 
+    bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(parameter['output_parameter'], output_parameter_label)), model_name = the_model, sobol_index='ST', 
                  fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=False, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
     
     bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \

@@ -58,6 +58,7 @@ def read_data(data_path, output_path, da=False, save_data='data.cvs'):
     # Reading data from Ansys output and calcuate mean over timesteps
     
     data_path = f"input_data/{data_path}"
+    output_path = './output_data/' + output_path + '/'
 
     if ".xlsx" in data_path: data_df_all = pd.read_excel(data_path) # xlsx files
     if ".csv" in data_path: data_df_all = pd.read_csv(data_path) # csv files

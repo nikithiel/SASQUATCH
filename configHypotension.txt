@@ -14,7 +14,7 @@ is_transient False
 normalize False
 scaler none
 save_data data_all.csv
-get_mean_of_each_input_pair False
+get_mean False #get mean of each input pair
 
 # Models
 models NIPCE # GP LR RF KNN Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree
