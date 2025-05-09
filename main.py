@@ -48,8 +48,6 @@ run_type = parameter['run_type']
 
 if run_type == 'da':
     print("Analyze Data\n------------")
-    
-    #df = read_data(parameter['data_path'], parameter['output_name'], da=True, save_data=parameter['save_data'])
     X_df, y_df = preprocessing(da=True, **parameter)
     
     output_plots = './output_data/' + parameter['output_name'] + '/' + 'Plots/'
@@ -68,37 +66,19 @@ if run_type == 'da':
 elif run_type == 'su' or run_type == 'sc':
     print("Surrogate Model Training and Comparison")
 
-    # ----- Initialize Hyperparameter ----- #
-    try:
-        output_data = './output_data/' + parameter['output_name'] + '/'
-        output_plots = output_data + 'Plots/'
-        model_names = parameter['models']
-        n_splits = parameter['n_splits']
-        shuffle = parameter['shuffle']
-        random_state = parameter['random_state']
-        is_plot_data = parameter['plot_data']
-        metrics = parameter['metrics']
-        
-        lower_bound = parameter.get('lower_bound', None)
-        upper_bound = parameter.get('upper_bound', None)
-
-    except Exception:
-        print("!!! Error: Parameter in config.txt file missing !!!")
-
     # ----- DATA Preprocessing ----- #
-    df = read_data(parameter['data_path'], output_data, da=True, save_data=parameter['save_data'])
-    X_df, y_df = preprocessing(df=df, input_parameter=parameter['input_parameter'], output_parameter=parameter['output_parameter'], \
-                                output_path=output_data, normalize=parameter['normalize'], scaler=parameter['scaler'], get_mean=parameter['get_mean'], \
-                                is_transient=parameter['is_transient'], lower_bound=lower_bound, upper_bound=upper_bound)
+    X_df, y_df = preprocessing(da=False, **parameter)
     print("  Data Preprocessing: Done")
 
     # ----- Creating models ----- #
     input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(model_names, input_bounds, parameter)
+    models, model_names = creatingModels(parameter['models'], input_bounds, parameter)
     print("  Creating Models: Done")
 
+    output_data = './output_data/' + parameter['output_name'] + '/'
+    output_plots = output_data + 'Plots/'
     # ----- Training and Testing of Surrogate Models ----- #
-    smc_results = kFold_Evaluation(X=X_df, y=y_df, n_splits=n_splits, shuffle=shuffle, random_state=random_state, models=models, folder=output_data)
+    smc_results = kFold_Evaluation(X=X_df, y=y_df, n_splits=parameter['n_splits'], shuffle=parameter['shuffle'], random_state=parameter['random_state'], models=models, folder=output_data)
     train_and_save_models(X_df, y_df, models, output_data)
     print("  Training and Testing: Done")
 
@@ -107,12 +87,12 @@ elif run_type == 'su' or run_type == 'sc':
     print("  Saving of smc results: Done")
     print("Surrogate Model Training: Done")
 
-    if is_plot_data:
+    if parameter['plot_data']:
         # ----- Plotting Results ----- #
         surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, parameter['output_parameter'], dict(zip(parameter['output_parameter'], parameter['output_units'])))
         plot_smc_timings(smc_results, output_plots, is_title=False)
-        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=metrics, average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
-        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=metrics, average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True)
+        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
+        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True)
         show_plots()
         
         print("  Plotting of smc results: Done")
@@ -139,10 +119,7 @@ elif run_type == 'sa':
     
 
     # ----- DATA Preprocessing ----- #
-    df = read_data(parameter['data_path'], output_data, da=True, save_data=parameter['save_data'])
-    X_df, y_df = preprocessing(df=df, input_parameter=parameter['input_parameter'], output_parameter=parameter['sa_output_parameter'], \
-                                output_path=output_data, normalize=parameter['normalize'], scaler=parameter['scaler'], get_mean=parameter['get_mean'], \
-                                is_transient=parameter['is_transient'], lower_bound=lower_bound, upper_bound=upper_bound)
+    X_df, y_df = preprocessing(da=False, **parameter)
     print("  Data Preprocessing: Done")
 
     # ----- Creating models ----- #
@@ -240,10 +217,7 @@ elif run_type == 'ps':
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
     
-    df = read_data(parameter['data_path'], output_data, da=True, save_data=parameter['save_data'])
-    X_df, y_df = preprocessing(df=df, input_parameter=input_parameter_names, output_parameter=output_parameter_names, \
-                                output_path=output_data, normalize=parameter['normalize'], scaler=parameter['scaler'], get_mean=parameter['get_mean'], \
-                                is_transient=parameter['is_transient'], lower_bound=lower_bound, upper_bound=upper_bound)
+    X_df, y_df = preprocessing(da=True, **parameter)
         
     input_bounds = get_data_bounds(X_df)
     models, model_names = creatingModels(model_names, input_bounds, parameter)
@@ -279,14 +253,9 @@ elif run_type == 'uq':
             
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
-
-    
     
     # ----- DATA Preprocessing ----- #
-    df = read_data(parameter['data_path'], output_data, da=True, save_data=parameter['save_data'])
-    X_df, y_df = preprocessing(df=df, input_parameter=parameter['input_parameter'], output_parameter=parameter['sa_output_parameter'], \
-                                output_path=output_data, normalize=parameter['normalize'], scaler=parameter['scaler'], get_mean=parameter['get_mean'], \
-                                is_transient=parameter['is_transient'], lower_bound=lower_bound, upper_bound=upper_bound)
+    X_df, y_df = preprocessing(da=True, **parameter)
     sa_input_initial_dict = {'y': -5, 'z': 51, 'alpha': 0, 'R': 3.6} #'alpha': 0,
     metric = 'maximum' # millimeter, percentages, maximum 
     if metric == 'percentages':  

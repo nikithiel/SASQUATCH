@@ -132,7 +132,7 @@ def read_input_parameter(subfolder_string):
     """
     return mv_uq_procect_preprocessing(**args)'''
     
-def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, \
+def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, \ #deprecated, now preprocessing() is the main preprocessing function
                                 normalize=False, scaler='none', get_mean=False,
                                 is_transient=False, lower_bound=721, upper_bound=1200):
     """Preprocessing for mitral valve uncertainty quantification. Cutting first 720 Time Steps.
@@ -215,7 +215,7 @@ def preprocessing(da=False, **kwargs):
     if kwargs['is_transient']:
         # Filter for transient data based on time steps.
         column_name = "Time Step"
-        df = df[(df[column_name] >= kwargs['lower_bound']) & (df[column_name] <= kwargs['upper_bound'])]
+        df = df[(df[column_name] >= lower_bound) & (df[column_name] <= upper_bound)]
         df.to_csv(kwargs['output_name'] + "/test_after_prep.csv", index=False)
         
     if kwargs['normalize']:

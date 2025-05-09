@@ -43,7 +43,7 @@ def read_user_defined_parameters(filename):
 
     return config_data
 
-def read_data(data_path, output_path, da=False, save_data='data.cvs'):
+def read_data(data_path, output_path, da=False, save_data='data.cvs'): #deprecated, now it is combined in preprocessing() in preprocessing.py
     """Reads the .xlsx, .csv, or .out files with data.
 
     Args:
