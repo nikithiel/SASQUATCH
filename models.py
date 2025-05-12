@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression, BayesianRidge
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.tree import DecisionTreeRegressor
-import chaospy as cp
+import chaospy as cp #use version 4.1.1 for now. Current version seems to be incompatible for now. Best to update for the future.
 import pandas as pd
 import numpy as np
 import os

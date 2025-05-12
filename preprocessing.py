@@ -132,7 +132,7 @@ def read_input_parameter(subfolder_string):
     """
     return mv_uq_procect_preprocessing(**args)'''
     
-def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, \ #deprecated, now preprocessing() is the main preprocessing function
+def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, #deprecated, now preprocessing() is the main preprocessing function
                                 normalize=False, scaler='none', get_mean=False,
                                 is_transient=False, lower_bound=721, upper_bound=1200):
     """Preprocessing for mitral valve uncertainty quantification. Cutting first 720 Time Steps.
@@ -209,6 +209,7 @@ def preprocessing(da=False, **kwargs):
     
     df = data_df_all.copy()
     
+    #set the upper and lower bound based on the parameter data.
     lower_bound = kwargs.get('lower_bound', None)
     upper_bound = kwargs.get('upper_bound', None)
 
@@ -228,8 +229,8 @@ def preprocessing(da=False, **kwargs):
         data_df = mean_of_timesteps(df, kwargs['input_parameter'])
     else:
         data_df = df
-        
-    data_df.to_csv(kwargs['output_name'] + "/reduced_data.csv")
+    
+    #data_df.to_csv(kwargs['output_name'] + "/reduced_data.csv")
     
     X_df = data_df[kwargs['input_parameter']]
     y_df = data_df[kwargs['output_parameter']]
