@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolu
 import pickle as pkl
 import os
 
-def kFold_Evaluation(X, y, models, **kwargs):
+def kFold_Evaluation(X, y, models, parameter):
     """Performs kFold cross validation.
     
     Args:
@@ -24,9 +24,9 @@ def kFold_Evaluation(X, y, models, **kwargs):
     """
 
     # save a lot of code complexity
-    n_splits = kwargs['n_splits']
-    shuffle= kwargs['shuffle']
-    random_state = kwargs['random_state']
+    n_splits = parameter['n_splits']
+    shuffle= parameter['shuffle']
+    random_state = parameter['random_state']
     
     # Creating k-Fold
     if random_state=='rand': random_state = np.random.randint(1000)
