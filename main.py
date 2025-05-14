@@ -72,7 +72,7 @@ elif run_type == 'su' or run_type == 'sc':
 
     # ----- Creating models ----- #
     input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(parameter['models'], input_bounds, parameter) #TODO Refactor
+    models, model_names = creatingModels(input_bounds, parameter) #TODO Refactor
     print("  Creating Models: Done")
 
     output_data = './output_data/' + parameter['output_name'] + '/'
