@@ -132,7 +132,7 @@ def read_input_parameter(subfolder_string):
     """
     return mv_uq_procect_preprocessing(**args)'''
     
-def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, \ #deprecated, now preprocessing() is the main preprocessing function
+def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path,  #deprecated, now preprocessing() is the main preprocessing function
                                 normalize=False, scaler='none', get_mean=False,
                                 is_transient=False, lower_bound=721, upper_bound=1200):
     """Preprocessing for mitral valve uncertainty quantification. Cutting first 720 Time Steps.
@@ -183,7 +183,6 @@ def preprocessing(da=False, **kwargs):
     New ,refactored preprocessing function combined with the read_data().
     Reads the data and returns both input and output data as dataframes.
     Args:
-        - df: dataFrame -> contains data
         - da: bool -> whether data analysis is running
         - kwargs: dict -> additional parameters for preprocessing
     Returns:
