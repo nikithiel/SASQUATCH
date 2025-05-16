@@ -16,7 +16,7 @@ Mail: joel.gestrich@rwth-aachen.de, niklas.thiel@rwth-aachen.de
 # ----- Imports ----- #
 import warnings
 import pandas as pd
-from initialization import read_user_defined_parameters, read_data, get_data_bounds
+from initialization import read_user_defined_parameters, get_data_bounds
 from preprocessing import preprocessing
 from models import creatingModels
 from surrogate_model_comparison import kFold_Evaluation, train_and_save_models
@@ -72,15 +72,21 @@ elif run_type == 'su' or run_type == 'sc':
 
     # ----- Creating models ----- #
     input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(parameter['models'], input_bounds, parameter)
+    models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done")
 
     output_data = './output_data/' + parameter['output_name'] + '/'
     output_plots = output_data + 'Plots/'
     # ----- Training and Testing of Surrogate Models ----- #
-    smc_results = kFold_Evaluation(X=X_df, y=y_df, n_splits=parameter['n_splits'], shuffle=parameter['shuffle'], random_state=parameter['random_state'], models=models, folder=output_data)
-    train_and_save_models(X_df, y_df, models, output_data)
+    smc_results = kFold_Evaluation(X=X_df, y=y_df, models=models, parameter = parameter)
+    train_and_save_models(X_df, y_df, models, output_data + '/trainedModels/')
     print("  Training and Testing: Done")
+    
+    #checkpoint here to ask if user wants to save the models or not
+    input("Do you want to compare the models? (y/n): ")
+    if input().lower() != 'y':
+        print("  Surrogate Model Comparison: Skipped")
+        exit()
 
     # ----- Saving Surrogate Model Comparison Results ----- #
     smc_results.to_csv(os.path.join(output_data, 'smc_results.csv'), index=False)
@@ -93,7 +99,7 @@ elif run_type == 'su' or run_type == 'sc':
         plot_smc_timings(smc_results, output_plots, is_title=False)
         plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
         plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True)
-        show_plots()
+        show_plots() if showplot else None
         
         print("  Plotting of smc results: Done")
         print("Surrogate Model Comparison: Done")

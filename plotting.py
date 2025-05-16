@@ -59,6 +59,8 @@ plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
 plt.rcParams['font.size'] = 10
 
+types = ['pdf']
+
 class ScalarFormatterForceFormat(ScalarFormatter):
     def _set_format(self, vmin=None, vmax=None):
         
@@ -600,9 +602,8 @@ def save_plot(plt, file_path):
         os.makedirs(directory)
         
     # save figure
-    plt.savefig(file_path + ".svg", format='svg', bbox_inches='tight')
-    plt.savefig(file_path + ".png")
-    plt.savefig(file_path + ".pdf")
+    for type in types:
+        plt.savefig(file_path + '.' + type, format=type, bbox_inches='tight')
     
 def get_figsize():
     """Returns the standard figure size

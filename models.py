@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import os
 
-def creatingModels(model_names, bounds, parameter):
+def creatingModels(bounds, parameter):
     """Creates models.
 
     Args:
@@ -23,6 +23,8 @@ def creatingModels(model_names, bounds, parameter):
     # Dictionary with models:
     models = {}
     implemented_models = ['Svr-Rbf', 'Svr-Linear', 'Svr-Poly', 'Svr-Sigmoid', 'RF', 'KNN', 'LR', 'Bayesian-Ridge', 'NIPCE','GP', 'DecisionTree']
+    
+    model_names = parameter['models']
     
     final_model_names = []
     if 'Svr-Rbf' in model_names:
