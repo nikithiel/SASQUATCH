@@ -1,5 +1,5 @@
 # [da] Data Analysis - [su] Surrogate Model Comparison - [sa] Sensitivity Analysis - [uq] Uncertainty Quantification - [ps] Project Specific
-run_type su
+run_type sa
 
 # Data
 data_path Data_example.csv
@@ -20,7 +20,7 @@ save_data none #set to a name to decide the lower folder to save the file otherw
 get_mean True #formerly get_mean_of_each_input_pair
 
 # Models
-models LR RF KNN # Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree NIPCE GP
+models LR RF #KNN # Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree NIPCE GP
 NIPCE_order 2
 
 # Training and Testing

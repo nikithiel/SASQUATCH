@@ -9,6 +9,7 @@ import chaospy as cp #use version 4.1.1 for now. Current version seems to be inc
 import pandas as pd
 import numpy as np
 import os
+#If the error No Module Named pkg_resources come up, then please run pip install setuptools to fix this
 
 def creatingModels(bounds, parameter):
     """Creates models.

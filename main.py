@@ -20,7 +20,7 @@ from initialization import read_user_defined_parameters, get_data_bounds
 from preprocessing import preprocessing
 from models import creatingModels
 from surrogate_model_comparison import kFold_Evaluation, train_and_save_models
-from plotting import plot_smc_timings, plot_smc_r2score_and_errors, plot_data
+from plotting import plot_smc_timings, plot_smc_r2score_and_errors, plot_data, plot_densities
 from plotting import surrogate_model_predicted_vs_actual, show_plots, plot_sa_results_heatmap
 from plotting import plot_sa_results_17_segments, plot_boxplots, plot_correlation
 from plotting import plot_feature_distribution, plot_feature_scatterplot, actual_scatter_plot
@@ -75,6 +75,7 @@ elif run_type == 'su' or run_type == 'sc':
     models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done")
 
+    #determine the path for the specific file and the folder to save the file
     output_data = './output_data/' + parameter['output_name'] + '/'
     output_plots = output_data + 'Plots/'
     # ----- Training and Testing of Surrogate Models ----- #

@@ -151,7 +151,7 @@ def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=
     plt.tight_layout()
     save_plot(plt, output_path + title)
 
-def plot_densitys(X_dict, Y_dict, output_path, lables=None, is_title=True, title="Densities plot"):
+def plot_densities(X_dict, Y_dict, output_path, lables=None, is_title=True, title="Densities plot"):
     """Plots and saves the distribution of each feature of the DataFrame.
 
     Args:
@@ -473,13 +473,16 @@ def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, outpu
         #print(sensitivity_values)
         if sensitivity_values:
             if len(model_names) == 1:
-                sns.heatmap(np.array(sensitivity_values), cmap="viridis", ax=axes, xticklabels=input_parameter_list, yticklabels=output_parameter_list if i==0 else False, cbar=i==(len(sa_results)-1), cbar_kws={'label': sa_sobol_indice})
+                heatmap = sns.heatmap(np.array(sensitivity_values), cmap="viridis", ax=axes, xticklabels=input_parameter_list, yticklabels=output_parameter_list if i==0 else False, cbar=i==(len(sa_results)-1), cbar_kws={'label': sa_sobol_indice}, annot = True, fmt = '.2f')
+                heatmap.set_yticklabels(heatmap.get_yticklabels(),rotation=0)
                 axes.set_title(model)   
             else:
-                sns.heatmap(np.array(sensitivity_values), cmap="viridis", ax=axes[i], xticklabels=input_parameter_list, yticklabels=output_parameter_list if i==0 else False, cbar=i==(len(sa_results)-1), cbar_kws={'label': sa_sobol_indice})            
+                heatmap = sns.heatmap(np.array(sensitivity_values), cmap="viridis", ax=axes[i], xticklabels=input_parameter_list, yticklabels=output_parameter_list if i==0 else False, cbar=i==(len(sa_results)-1), cbar_kws={'label': sa_sobol_indice}, annot = True, fmt = '.2f')            
+                heatmap.set_yticklabels(heatmap.get_yticklabels(),rotation=0)
                 axes[i].set_title(model)            
 
     plt.tight_layout()
+    plt.yticks(rotation=180)
     save_plot(plt, output_path + title)
 
 def plot_sa_results_17_segments(sa_results_dict, input_names, output_path, sa_17_segment_model, sa_sobol_indice):
