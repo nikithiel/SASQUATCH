@@ -16,7 +16,7 @@ lower_bound 721
 upper_bound 1200
 normalize False
 scaler none
-save_data data_all.csv
+save_data none #set to a name to decide the lower folder to save the file otherwise set it to false to make sure no files are saved.
 get_mean True #formerly get_mean_of_each_input_pair
 
 # Models

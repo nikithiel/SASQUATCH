@@ -132,11 +132,7 @@ def read_input_parameter(subfolder_string):
     """
     return mv_uq_procect_preprocessing(**args)'''
     
-<<<<<<< HEAD
 def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, #deprecated, now preprocessing() is the main preprocessing function
-=======
-def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path,  #deprecated, now preprocessing() is the main preprocessing function
->>>>>>> a7defd7c96df173c1a249604cda557c6556b385c
                                 normalize=False, scaler='none', get_mean=False,
                                 is_transient=False, lower_bound=721, upper_bound=1200):
     """Preprocessing for mitral valve uncertainty quantification. Cutting first 720 Time Steps.
@@ -202,7 +198,7 @@ def preprocessing(da=False, **kwargs):
     else: data_df_all = read_ansys_output_to_dfs(data_path, da=da) # Ansys Output Files
     
     # Saving data
-    if kwargs['save_data'].lower() != 'false':
+    if kwargs['save_data'].lower() != 'none':
         # Check directory and creating directory if necessary
         directory = os.path.dirname(output_path)
         if not os.path.exists(directory):

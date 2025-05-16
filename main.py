@@ -23,7 +23,7 @@ from surrogate_model_comparison import kFold_Evaluation, train_and_save_models
 from plotting import plot_smc_timings, plot_smc_r2score_and_errors, plot_data
 from plotting import surrogate_model_predicted_vs_actual, show_plots, plot_sa_results_heatmap
 from plotting import plot_sa_results_17_segments, plot_boxplots, plot_correlation
-from plotting import plot_feature_distribution, plot_feature_scatterplot, plot_densitys, actual_scatter_plot
+from plotting import plot_feature_distribution, plot_feature_scatterplot, actual_scatter_plot
 from plotting import bounds_variation_plot, bounds_mean_std, bounds_sobol
 from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_bounds
 
@@ -83,10 +83,12 @@ elif run_type == 'su' or run_type == 'sc':
     print("  Training and Testing: Done")
     
     #checkpoint here to ask if user wants to save the models or not
-    input("Do you want to compare the models? (y/n): ")
+    print("Do you want to compare the models? (y/n): ")
     if input().lower() != 'y':
         print("  Surrogate Model Comparison: Skipped")
         exit()
+    else:
+        print("  Performing Surrogate Model Comparison")
 
     # ----- Saving Surrogate Model Comparison Results ----- #
     smc_results.to_csv(os.path.join(output_data, 'smc_results.csv'), index=False)
@@ -116,7 +118,6 @@ elif run_type == 'sa':
         output_parameter_sa_plot = parameter['output_parameter_sa_plot']
         sa_17_segment_model = parameter['sa_17_segment_model']
         sa_sobol_indice = parameter['sa_sobol_indice']
-        sample_size = parameter['sa_sample_size']
         lower_bound = parameter.get('lower_bound', None)
         upper_bound = parameter.get('upper_bound', None)
 
@@ -130,12 +131,12 @@ elif run_type == 'sa':
 
     # ----- Creating models ----- #
     input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(model_names_input, input_bounds, parameter)
+    models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #
     #sa_input_bounds = {'y': {'min': -7, 'max': -3}, 'z': {'min': 49., 'max': 53.}, 'alpha': {'min': -10, 'max': 10}, 'R': {'min': 2.6, 'max': 4.6}}
-    sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, input_bounds, sample_size=sample_size)
+    sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, input_bounds, parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
     # ----- Saving SA Results ----- #
@@ -145,15 +146,15 @@ elif run_type == 'sa':
 
     # ----- Plotting Results ----- #
     Y_dict['Training Data'] = y_df.values
-    plot_densitys(X_dict, Y_dict, output_plots, lables=parameter['sa_output_parameter'], is_title=False, title="Density plot")
+    plot_densities(X_dict, Y_dict, output_plots, lables=parameter['sa_output_parameter'], is_title=False, title="Density plot")
     values_list = []
     model_list = []
     for (model, values) in Y_dict.items():
         values_list.append(values)
         model_list.append(model)
     plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_plots, sa_sobol_indice)
-    plot_sa_results_17_segments(sa_results, input_parameter_list, output_plots, "NIPCE", sa_sobol_indice)
-    show_plots()
+    #plot_sa_results_17_segments(sa_results, input_parameter_list, output_plots, "NIPCE", sa_sobol_indice)
+    show_plots() if showplot else None
     print("  Plotting of sa results: Done")
 
     print("Sensitivity Analysis: Done")
@@ -226,7 +227,7 @@ elif run_type == 'ps':
     X_df, y_df = preprocessing(da=True, **parameter)
         
     input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(model_names, input_bounds, parameter)
+    models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ", model_names)
     print(y_df.columns)
     #plot_feature_distribution(y_df[output_parameter_sa_plot], output_plots, num_bins=10, is_title=False, title="Output_Distribution", num_subplots_in_row=4, figure_size='small')
@@ -235,7 +236,7 @@ elif run_type == 'ps':
     #show_plots()
     plot_feature_scatterplot(pd.concat([X_df, y_df], axis=1), input_parameter, output_parameter_sa_plot, 
                              output_plots, fig_size=(17.5/2.54, 17.5/2.54), is_title=False, title="Scatterplot Input Output")
-    show_plots()
+    show_plots() if showplot else None
 
 # Sensitivity analysis bounds or uncertainty quantification
 elif run_type == 'uq':
@@ -271,7 +272,7 @@ elif run_type == 'uq':
 
     # ----- Creating models ----- #
     input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(model_names_input, input_bounds, parameter)
+    models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #  
@@ -332,7 +333,7 @@ elif run_type == 'uq':
         bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[configuration]['numbers'], output_names=to_plot_dict[configuration]['names'], \
                         model=the_model, is_title=False, title=title+"_bounds_std_region_allinone_"+str(metric)+"_"+configuration, x_annot=x_annot, y_annot="Output Value", \
                             all_in_one=True, annotation='pstd', figsize=(3.2,3))
-    show_plots()
+    show_plots() if showplot else None 
     
     print("  Plotting of sa results: Done")
 
