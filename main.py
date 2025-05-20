@@ -42,7 +42,7 @@ warnings.filterwarnings("ignore") # ignores warnings
 
 # Reading user defined hyper parameter
 parameter = read_user_defined_parameters('configMVUQ.txt')
-showplot = False #set to True to show plots, this speeds up the process
+showplot = False #set to True to show plots
 
 run_type = parameter['run_type']
 

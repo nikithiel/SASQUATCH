@@ -59,7 +59,19 @@ plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
 plt.rcParams['font.size'] = 10
 
-types = ['pdf']
+#read specifically the types to be plotted from the input file
+with open('configMVUQ.txt','r') as file:
+    for line in file:
+        if line.startswith('plot_type'):
+            splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                types = []
+                for value in values:
+                    types.append(value)
 
 class ScalarFormatterForceFormat(ScalarFormatter):
     def _set_format(self, vmin=None, vmax=None):
@@ -605,6 +617,7 @@ def save_plot(plt, file_path):
         os.makedirs(directory)
         
     # save figure
+    print("   Plots being saved as type: ", types)
     for type in types:
         plt.savefig(file_path + '.' + type, format=type, bbox_inches='tight')
     

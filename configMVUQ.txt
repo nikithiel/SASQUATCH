@@ -16,7 +16,7 @@ lower_bound 721
 upper_bound 1200
 normalize False
 scaler none
-save_data none #set to a name to decide the lower folder to save the file otherwise set it to false to make sure no files are saved.
+save_data none #set to a name to decide the lower folder to save the file otherwise set it to none to make sure no files are saved.
 get_mean True #formerly get_mean_of_each_input_pair
 
 # Models
@@ -39,6 +39,7 @@ is_plotting_df_boxplot False
 is_plotting_model_comparison True
 is_plotting_sa_heatmap True
 number_of_top_models 6
+plot_type pdf svg #png #saves the plot once each for all the output types.
 
 # Sensitivity Analysis
 sa_models NIPCE GP LR # NIPCE GP
