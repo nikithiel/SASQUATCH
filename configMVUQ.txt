@@ -20,11 +20,12 @@ save_data none #set to a name to decide the lower folder to save the file otherw
 get_mean True #formerly get_mean_of_each_input_pair
 
 # Models
-models LR RF #KNN # Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree NIPCE GP
+models LR RF NIPCE #KNN Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree NIPCE GP
 NIPCE_order 2
 
 # Training and Testing
-n_splits 10
+n_splits 10n
+
 shuffle True
 random_state 44 # rand # 42
 metrics r2_score MAPE # MAXE MAE
@@ -50,3 +51,8 @@ sa_output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-
 output_parameter_sa_plot WSS Eloss Ekin TVPG
 output_units_sa_plot Pa Pa*m$^3$ Pa*m$^3$ Pa
 output_parameter_sa_plot_label WSS Eloss Ekin TVPG
+
+# Uncertainty Quantification
+input_start average #median specific #select one be used as a base point for perturbation
+input_start_point 1 2 3 4 #just placeholder number for the 'specific' option on input_start
+input_start_perturbation 10 #25 #perturbation percentage for the starting input

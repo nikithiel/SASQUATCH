@@ -141,9 +141,12 @@ elif run_type == 'sa':
     print("  Perform SA: Done")
 
     # ----- Saving SA Results ----- #
-    with open("sa_results.txt", 'w') as sa_out_file:
-        sa_out_file.write(str(sa_results))
-    print("  Saving of sa results: Done")
+    if input('   Do you want to save the sensitivity analysis results(y/n):' ) == 'y':
+        with open("sa_results.txt", 'a') as sa_out_file:
+            sa_out_file.write(str(sa_results))
+        print("  Saving of sa results: Done")
+    else:
+        print("   Saving of sa results: Skipped")
 
     # ----- Plotting Results ----- #
     Y_dict['Training Data'] = y_df.values
@@ -153,8 +156,8 @@ elif run_type == 'sa':
     for (model, values) in Y_dict.items():
         values_list.append(values)
         model_list.append(model)
-    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_plots, sa_sobol_indice)
-    #plot_sa_results_17_segments(sa_results, input_parameter_list, output_plots, "NIPCE", sa_sobol_indice)
+    
+    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_plots, sa_sobol_indice, plot_17_segment = True, sa_17_segment_model = 'LR')
     show_plots() if showplot else None
     print("  Plotting of sa results: Done")
 

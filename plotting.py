@@ -456,7 +456,7 @@ def show_plots():
     """Shows plots"""
     plt.show()
 
-def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_path, sa_sobol_indice):
+def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_path, sa_sobol_indice, sa_17_segment_model, plot_17_segment = False):
     """Plots and saves the sensitivity heatmap.
 
     Args:
@@ -466,6 +466,8 @@ def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, outpu
         - output_parameter_sa_plot: list -> list of output parameters for sa plot
         - output_path: str -> path to save the plot
         - sa_sobol_indice: str -> Sobol indice for sa (ST or S1)
+        - sa_17_segment_model: str -> Model for the 17 segment plot.
+        - plot_17_segment: bool -> if True, plot the sensitivity analysis results using 17 segment visualization
     """
     input_parameter_list = list(input_parameter_list)
     if thesis:
@@ -497,6 +499,8 @@ def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, outpu
     plt.yticks(rotation=180)
     save_plot(plt, output_path + title)
 
+    plot_sa_results_17_segments(sa_results, input_parameter_list, output_path, sa_17_segment_model, sa_sobol_indice) if plot_17_segment else None
+
 def plot_sa_results_17_segments(sa_results_dict, input_names, output_path, sa_17_segment_model, sa_sobol_indice):
     """Plots and saves the 17-segments plot.
 
@@ -507,7 +511,10 @@ def plot_sa_results_17_segments(sa_results_dict, input_names, output_path, sa_17
         - sa_17_segment_model: Surrogate Model -> which model shall be used
         - sa_sobol_indice: str -> Sobol indice for sa (ST or S1)
     """
-    fig, axes = plt.subplots(1, len(sa_results_dict[sa_17_segment_model]['TVPG'][sa_sobol_indice]), figsize=(6.5, 2))
+    try:
+        fig, axes = plt.subplots(1, len(sa_results_dict[sa_17_segment_model]['TVPG'][sa_sobol_indice]), figsize=(6.5, 2))
+    except KeyError:
+        print('   Model not found in the sensitivity analysis result. Try checking if the model name is correct or listed in the input text file')
     radii = np.array([1, 2, 3, 4])
     cmap = plt.get_cmap('viridis')
     norm = Normalize(vmin=0, vmax=1.0)#vmax=max(segment_data.values()))
@@ -550,7 +557,7 @@ def plot_sa_results_17_segments(sa_results_dict, input_names, output_path, sa_17
         axes[k].set_xlim(-lim, lim)
         axes[k].set_ylim(-lim, lim)
         axes[k].set_aspect('equal')
-        axes[k].set_title(input_dict[input_name])
+        axes[k].set_title(input_name)
         if k == len(radii)-1:
             cbar = plt.colorbar(sm, ax=axes[k], orientation ='vertical', fraction=0.05)
             cbar.set_label(sa_sobol_indice)
