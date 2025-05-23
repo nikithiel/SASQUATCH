@@ -15,8 +15,8 @@ def creatingModels(bounds, parameter):
     """Creates models.
 
     Args:
-        - model_names: list -> list of model names
         - bounds: dict -> dictionary with input-parameter bounds
+        - parameter: dict -> parameter acquired from reading the config file
     Returns:
         - models: dict ->  dictionary containing the models
         - final_model_names: list -> list of strings with model names for plots

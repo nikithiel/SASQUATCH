@@ -59,7 +59,7 @@ plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
 plt.rcParams['font.size'] = 10
 
-#read specifically the types to be plotted from the input file
+# Read the plot file type from the config file
 with open('configMVUQ.txt','r') as file:
     for line in file:
         if line.startswith('plot_type'):
@@ -262,6 +262,8 @@ def plot_feature_scatterplot(df, x_cols, y_cols, output_path, fig_size=(6.5, 6.5
         - x_cols: list -> names of the columns for x-axis
         - y_cols: list -> names of the columns for y-axis
         - output_path: str -> path to save the plot
+        - fig_size: tuple -> size of the figure
+        - is_title: bool -> if True use the title otherwise use default title
         - title: str -> title of plot
     """
 
@@ -342,7 +344,7 @@ def plot_smc_timings(df, output_path, is_title=True, title="Boxplot of Timings o
     plt.tight_layout()
     save_plot(plt, output_path + title)
 
-def plot_data(X_df, y_df, output_path, is_title=True, title="Pairplot of Data"):
+def plot_data(X_df, y_df, output_path, title="Pairplot of Data"):
     """Plots and saves the pairplot of data.
 
     Args:
@@ -623,7 +625,7 @@ def save_plot(plt, file_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
         
-    # save figure
+    # Save figure
     print("   Plots being saved as type: ", types)
     for type in types:
         plt.savefig(file_path + '.' + type, format=type, bbox_inches='tight')
