@@ -42,25 +42,26 @@ warnings.filterwarnings("ignore") # ignores warnings
 
 # Reading user defined hyper parameter
 parameter = read_user_defined_parameters('configMVUQ.txt')
-showplot = False #set to True to show plots
+showplot = True #set to True to show plots
 
 run_type = parameter['run_type']
 
 if run_type == 'da':
     print("Analyze Data\n------------")
     X_df, y_df = preprocessing(da=True, **parameter)
-    
-    output_plots = './output_data/' + parameter['output_name'] + '/' + 'Plots/'
+    output_plots = './output_data/' + parameter['output_name'] + '/' +'data_analysis' + '/'
+
+    # Plotting default plots
+    print("Plotting Data\n------------")
     plot_correlation(X_df, y_df, output_plots)
-    show_plots() if showplot else None
-    plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter")
-    show_plots() if showplot else None
     plot_feature_distribution(y_df, output_plots, dict(zip(parameter['output_parameter'], parameter['output_units'])), num_bins=20, title="Distribution of Output Parameter")
-    show_plots() if showplot else None
-    plot_data(X_df, y_df, output_plots)
-    show_plots() if showplot else None
-    actual_scatter_plot(X_df, y_df, output_plots)
-    show_plots() if showplot else None
+    #actual_scatter_plot(X_df, y_df, output_plots) #currently doesn't work for some reason
+    #show_plots() if input(" Display plots?: (y/n) ") == 'y' else None
+
+    # Optional plots
+    plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter") if input(" Would you like to plot the boxplot as well?: (y/n)") == 'y' else None
+    plot_data(X_df, y_df, output_plots) if input(" Would you like to plot the detailed scatterplot as well?: (y/n)") == 'y' else None
+    show_plots() if input(" Display plots?: (y/n) ") == 'y' else None
     print("Analyze Data: Done")
 
 elif run_type == 'su' or run_type == 'sc':
@@ -76,8 +77,9 @@ elif run_type == 'su' or run_type == 'sc':
     print("  Creating Models: Done")
 
     #determine the path for the specific file and the folder to save the file
-    output_data = './output_data/' + parameter['output_name'] + '/'
+    output_data = './output_data/' + parameter['output_name'] + '/' + 'surrogate_model' + '/'
     output_plots = output_data + 'Plots/'
+
     # ----- Training and Testing of Surrogate Models ----- #
     smc_results = kFold_Evaluation(X=X_df, y=y_df, models=models, parameter = parameter)
     train_and_save_models(X_df, y_df, models, output_data + '/trainedModels/')
@@ -98,11 +100,14 @@ elif run_type == 'su' or run_type == 'sc':
 
     if parameter['plot_data']:
         # ----- Plotting Results ----- #
-        surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, parameter['output_parameter'], dict(zip(parameter['output_parameter'], parameter['output_units'])))
-        plot_smc_timings(smc_results, output_plots, is_title=False)
+        # Plotting default plot
         plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
-        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True)
-        show_plots() if showplot else None
+
+        # Optional plots
+        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True) if input(" Would you like to plot detailed r2 score?: (y/n) ") == 'y' else None
+        surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, parameter['output_parameter'], dict(zip(parameter['output_parameter'], parameter['output_units']))) if input(" Would you like to plot the model comparison as a scatter plot?: (y/n) ") == 'y' else None
+        plot_smc_timings(smc_results, output_plots, is_title=False) if input(" Would you like to plot the surrogate model comparison timing plot?: (y/n) ") == 'y' else None
+        show_plots() if input(" Display plots?: (y/n) ") == 'y' else None
         
         print("  Plotting of smc results: Done")
         print("Surrogate Model Comparison: Done")
@@ -110,21 +115,14 @@ elif run_type == 'su' or run_type == 'sc':
 elif run_type == 'sa':
     print("Sensitivity Analysis")
 
-    # ----- Initialize Hyperparameter ----- #
+    # ----- Initialize path to save the results ----- #
     try:
-        output_parameter = parameter['sa_output_parameter']
-        output_data = './output_data/' + parameter['output_name'] + '/'
-        output_plots = output_data + 'Plots/'
-        model_names_input = parameter['sa_models']
-        output_parameter_sa_plot = parameter['output_parameter_sa_plot']
-        sa_17_segment_model = parameter['sa_17_segment_model']
-        sa_sobol_indice = parameter['sa_sobol_indice']
-        lower_bound = parameter.get('lower_bound', None)
-        upper_bound = parameter.get('upper_bound', None)
+        # Creating the path to save the file
+        output_data = './output_data/' + parameter['output_name'] + '/' + 'sensitivity_analysis' + '/'
+        output_plots = output_data
 
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
-    
 
     # ----- DATA Preprocessing ----- #
     X_df, y_df = preprocessing(da=False, **parameter)
@@ -136,7 +134,6 @@ elif run_type == 'sa':
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #
-    #sa_input_bounds = {'y': {'min': -7, 'max': -3}, 'z': {'min': 49., 'max': 53.}, 'alpha': {'min': -10, 'max': 10}, 'R': {'min': 2.6, 'max': 4.6}}
     sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, input_bounds, parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
@@ -144,9 +141,9 @@ elif run_type == 'sa':
     if input('   Do you want to save the sensitivity analysis results(y/n):' ) == 'y':
         with open("sa_results.txt", 'a') as sa_out_file:
             sa_out_file.write(str(sa_results))
-        print("  Saving of sa results: Done")
+        print("  Saving sensitivity analysis results: Done")
     else:
-        print("   Saving of sa results: Skipped")
+        print("   Saving sensitivity analysis results: Skipped")
 
     # ----- Plotting Results ----- #
     Y_dict['Training Data'] = y_df.values
@@ -157,8 +154,9 @@ elif run_type == 'sa':
         values_list.append(values)
         model_list.append(model)
     
-    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_plots, sa_sobol_indice, plot_17_segment = True, sa_17_segment_model = 'LR')
-    show_plots() if showplot else None
+    plot_17_segment = True if input (" Plot the 17 segment model as well? (y/n)") == 'y' else False
+    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, parameter['output_parameter_sa_plot'], output_plots, parameter['sa_sobol_indice'], plot_17_segment = plot_17_segment, sa_17_segment_model = parameter['sa_17_segment_model'])
+    show_plots() if input (" Display plots?: (y/n)") == 'y' else None
     print("  Plotting of sa results: Done")
 
     print("Sensitivity Analysis: Done")
@@ -251,16 +249,13 @@ elif run_type == 'uq':
         input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
         output_parameter = parameter['sa_output_parameter']
         output_parameter_label = parameter.get('output_parameter_label', parameter['sa_output_parameter'])
-        output_data = './output_data/' + parameter['output_name'] + '/'
-        output_plots = output_data + 'Plots/'
-        model_names_input = parameter['sa_models']
+
+        output_data = './output_data/' + parameter['output_name'] + '/' + 'uncertainty_quantification/'
+        output_plots = output_data
+
         output_parameter_sa_plot = parameter['output_parameter_sa_plot']
         sa_17_segment_model = parameter['sa_17_segment_model']
-        sa_sobol_indice = parameter['sa_sobol_indice']
         sample_size = parameter['sa_sample_size']
-        
-        lower_bound = parameter.get('lower_bound', None)
-        upper_bound = parameter.get('upper_bound', None)
             
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")

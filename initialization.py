@@ -1,4 +1,4 @@
-from preprocessing import read_ansys_output_to_dfs, mean_of_timesteps, normalize_data, scale_data, mv_uq_procect_preprocessing
+from preprocessing import read_ansys_output_to_dfs, mean_of_timesteps, normalize_data, scale_data
 import pandas as pd
 import os
 
