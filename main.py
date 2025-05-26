@@ -130,7 +130,7 @@ elif run_type == 'sa':
 
     # ----- Creating models ----- #
     input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(model_names_input, input_bounds, parameter)
+    models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #
@@ -140,7 +140,7 @@ elif run_type == 'sa':
 
     # ----- Saving SA Results ----- #
     with open("sa_results.txt", 'w') as sa_out_file:
-        sa_out_file.write(str(sa_results))
+        sa_out_file.write(str(sa_results)) #TODO: NUTZER FRAGEN
     print("  Saving of sa results: Done")
 
     # ----- Plotting Results ----- #
@@ -151,7 +151,7 @@ elif run_type == 'sa':
     for (model, values) in Y_dict.items():
         values_list.append(values)
         model_list.append(model)
-    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_plots, sa_sobol_indice)
+    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_plots, sa_sobol_indice, n_segment=False) #TODO: n_segment impelementieren
     plot_sa_results_17_segments(sa_results, input_parameter_list, output_plots, "NIPCE", sa_sobol_indice)
     show_plots()
     print("  Plotting of sa results: Done")
@@ -271,7 +271,7 @@ elif run_type == 'uq':
 
     # ----- Creating models ----- #
     input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(model_names_input, input_bounds, parameter)
+    models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #  
