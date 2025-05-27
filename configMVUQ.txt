@@ -15,7 +15,6 @@ input_point average # Median Specific
 input_points 4 7 1 4 # Please input the same amount as input_parameter
 input_point_perturbation 10 #25 
 
-
 is_transient True
 lower_bound 721
 upper_bound 1200

@@ -42,7 +42,7 @@ warnings.filterwarnings("ignore") # ignores warnings
 
 # Reading user defined hyper parameter
 parameter = read_user_defined_parameters('configMVUQ.txt')
-showplot = True #set to True to show plots
+showplot = parameter['plot_data']
 
 run_type = parameter['run_type']
 
@@ -55,13 +55,13 @@ if run_type == 'da':
     print("Plotting Data\n------------")
     plot_correlation(X_df, y_df, output_plots)
     plot_feature_distribution(y_df, output_plots, dict(zip(parameter['output_parameter'], parameter['output_units'])), num_bins=20, title="Distribution of Output Parameter")
-    #actual_scatter_plot(X_df, y_df, output_plots) #currently doesn't work for some reason
+    actual_scatter_plot(X_df, y_df, output_plots)
     #show_plots() if input(" Display plots?: (y/n) ") == 'y' else None
 
     # Optional plots
     plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter") if input(" Would you like to plot the boxplot as well?: (y/n)") == 'y' else None
     plot_data(X_df, y_df, output_plots) if input(" Would you like to plot the detailed scatterplot as well?: (y/n)") == 'y' else None
-    show_plots() if input(" Display plots?: (y/n) ") == 'y' else None
+    show_plots() showplot else None
     print("Analyze Data: Done")
 
 elif run_type == 'su' or run_type == 'sc':
@@ -107,7 +107,7 @@ elif run_type == 'su' or run_type == 'sc':
         plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True) if input(" Would you like to plot detailed r2 score?: (y/n) ") == 'y' else None
         surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, parameter['output_parameter'], dict(zip(parameter['output_parameter'], parameter['output_units']))) if input(" Would you like to plot the model comparison as a scatter plot?: (y/n) ") == 'y' else None
         plot_smc_timings(smc_results, output_plots, is_title=False) if input(" Would you like to plot the surrogate model comparison timing plot?: (y/n) ") == 'y' else None
-        show_plots() if input(" Display plots?: (y/n) ") == 'y' else None
+        show_plots() if showplot else None
         
         print("  Plotting of smc results: Done")
         print("Surrogate Model Comparison: Done")
@@ -156,7 +156,7 @@ elif run_type == 'sa':
     
     plot_17_segment = True if input (" Plot the 17 segment model as well? (y/n)") == 'y' else False
     plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, parameter['output_parameter_sa_plot'], output_plots, parameter['sa_sobol_indice'], plot_17_segment = plot_17_segment, sa_17_segment_model = parameter['sa_17_segment_model'])
-    show_plots() if input (" Display plots?: (y/n)") == 'y' else None
+    show_plots() if showplot else None
     print("  Plotting of sa results: Done")
 
     print("Sensitivity Analysis: Done")
