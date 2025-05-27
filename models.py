@@ -5,17 +5,18 @@ from sklearn.linear_model import LinearRegression, BayesianRidge
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.tree import DecisionTreeRegressor
-import chaospy as cp
+import chaospy as cp #use version 4.1.1 for now. Current version seems to be incompatible for now. Best to update for the future.
 import pandas as pd
 import numpy as np
 import os
+#If the error No Module Named pkg_resources come up, then please run pip install setuptools to fix this
 
 def creatingModels(bounds, parameter):
     """Creates models.
 
     Args:
-        - model_names: list -> list of model names
         - bounds: dict -> dictionary with input-parameter bounds
+        - parameter: dict -> parameter acquired from reading the config file
     Returns:
         - models: dict ->  dictionary containing the models
         - final_model_names: list -> list of strings with model names for plots

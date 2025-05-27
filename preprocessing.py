@@ -7,10 +7,8 @@ def read_ansys_output_to_dfs(data_path, da=False):
     """Reading the .out files from ansys
     
     Args:
-        - data_path : str -> path to input data / folder (ansys)
-        - da : bool -> whether data analysis is running
-        - normalize : bool -> whether normalize the data. The default is True.
-        - scaler : str -> which scaler is used. The default is 'none'.
+        - data_path : str -> path to input data / folder (ansys).
+        - da : bool -> whether data analysis is running.
     Returns:
         final_combined_df : dataFrame -> all data in one dataframe
 
@@ -127,12 +125,13 @@ def read_input_parameter(subfolder_string):
         dict[key] = value
     return dict
 
+# preprocessing() and mv_uq_procect_preprocessing() is now deprecated
 '''def preprocessing(**args):
     """Wrapper for project specific preprocessing.
     """
     return mv_uq_procect_preprocessing(**args)'''
     
-def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path,  #deprecated, now preprocessing() is the main preprocessing function
+'''def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_path, #deprecated, now preprocessing() is the main preprocessing function
                                 normalize=False, scaler='none', get_mean=False,
                                 is_transient=False, lower_bound=721, upper_bound=1200):
     """Preprocessing for mitral valve uncertainty quantification. Cutting first 720 Time Steps.
@@ -176,7 +175,7 @@ def mv_uq_procect_preprocessing(df, input_parameter, output_parameter, output_pa
     X_df = data_df[input_parameter]
     y_df = data_df[output_parameter]
 
-    return X_df, y_df
+    return X_df, y_df'''
 
 def preprocessing(da=False, **kwargs):
     '''
@@ -198,7 +197,7 @@ def preprocessing(da=False, **kwargs):
     else: data_df_all = read_ansys_output_to_dfs(data_path, da=da) # Ansys Output Files
     
     # Saving data
-    if kwargs['save_data'].lower() != 'false':
+    if kwargs['save_data'].lower() != 'none':
         # Check directory and creating directory if necessary
         directory = os.path.dirname(output_path)
         if not os.path.exists(directory):
@@ -208,6 +207,7 @@ def preprocessing(da=False, **kwargs):
     
     df = data_df_all.copy()
     
+    #set the upper and lower bound based on the parameter data.
     lower_bound = kwargs.get('lower_bound', None)
     upper_bound = kwargs.get('upper_bound', None)
 
@@ -227,8 +227,8 @@ def preprocessing(da=False, **kwargs):
         data_df = mean_of_timesteps(df, kwargs['input_parameter'])
     else:
         data_df = df
-        
-    data_df.to_csv(kwargs['output_name'] + "/reduced_data.csv")
+    
+    #data_df.to_csv(kwargs['output_name'] + "/reduced_data.csv")
     
     X_df = data_df[kwargs['input_parameter']]
     y_df = data_df[kwargs['output_parameter']]

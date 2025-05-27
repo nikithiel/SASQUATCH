@@ -1,18 +1,18 @@
 # [da] Data Analysis - [su] Surrogate Model Comparison - [sa] Sensitivity Analysis - [uq] Uncertainty Quantification - [ps] Project Specific
-run_type su
+run_type da
 
 # Data
 data_path Data_example.csv
 output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
 output_units Pa Pa*m$^3$ Pa*m$^3$ Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa
 output_parameter_label WSS Eloss Ekin TVPG WSS$_1$ WSS$_2$ WSS$_3$ WSS$_4$ WSS$_5$ WSS$_6$ WSS$_7$ WSS$_8$ WSS$_9$ WSS$_{10}$ WSS$_{11}$ WSS$_{12}$ WSS$_{13}$ WSS$_{14}$ WSS$_{15}$ WSS$_{16}$ WSS$_{17}$
-output_name MV_UQ#
+output_name MV_UQ 
 
 input_parameter y z alpha R
 input_units mm mm $^\circ$ mm
 input_parameter_label $y_d$ $z_d$ $\alpha$ $R_L$
-input_point average #median Specific
-input_points 4 7 1 4 #please input the same amount as input_parameter
+input_point average # Median Specific
+input_points 4 7 1 4 # Please input the same amount as input_parameter
 input_point_perturbation 10 #25 
 
 
@@ -21,17 +21,18 @@ lower_bound 721
 upper_bound 1200
 normalize False
 scaler none
-save_data data_all.csv
-get_mean True #formerly get_mean_of_each_input_pair
+save_data none # Set to a name to decide the lower folder to save the file otherwise set it to none to make sure no files are saved.
+get_mean True # Formerly get_mean_of_each_input_pair
 
 # Models
-models NIPCE GP #LR RF KNN Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree
+models LR RF NIPCE #KNN Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree NIPCE GP
 NIPCE_order 2
 
 # Training and Testing
 n_splits 10
+
 shuffle True
-random_state 44 # rand # 42
+random_state 44
 metrics r2_score MAPE # MAXE MAE
 
 # Plotting
@@ -44,14 +45,19 @@ is_plotting_df_boxplot False
 is_plotting_model_comparison True
 is_plotting_sa_heatmap True
 number_of_top_models 6
-output_type pdf #png svg
+plot_type pdf png # Saves the plot once each for all the output types listed.
 
 # Sensitivity Analysis
 sa_models NIPCE GP LR # NIPCE GP
-sa_17_segment_model NIPCE_2
+sa_17_segment_model LR
 sa_sobol_indice ST # S1 or ST
 sa_sample_size 512
 sa_output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
 output_parameter_sa_plot WSS Eloss Ekin TVPG
 output_units_sa_plot Pa Pa*m$^3$ Pa*m$^3$ Pa
 output_parameter_sa_plot_label WSS Eloss Ekin TVPG
+
+# Uncertainty Quantification
+input_start average # Median specific #select one be used as a base point for perturbation
+input_start_point 1 2 3 4 # Just placeholder number for the 'specific' option on input_start
+input_start_perturbation 10 #25 # Perturbation percentage for the starting input
