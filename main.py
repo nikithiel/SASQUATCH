@@ -161,85 +161,6 @@ elif run_type == 'sa':
 
     print("Sensitivity Analysis: Done")
 
-elif run_type == 'ps':
-    print("Project Specific")
-    try:
-
-        input_parameter_names = parameter['input_parameter']
-        input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
-        input_parameter_units = parameter['input_units']
-
-        output_parameter_names = parameter['output_parameter']
-        output_parameter_label = parameter.get('output_parameter_label', parameter['output_parameter'])
-        output_parameter_units = parameter['output_units']
-
-        output_parameter_sa_plot_names = parameter['output_parameter_sa_plot']
-        output_parameter_sa_plot_label = parameter.get('output_parameter_sa_plot_label', parameter['output_parameter_sa_plot'])
-        output_parameter_sa_plot_units = parameter['output_units_sa_plot']
-
-        output_data = './output_data/' + parameter['output_name'] + '/'
-        output_plots = output_data + 'Plots/'
-        model_names = parameter['models']
-        
-        lower_bound = parameter.get('lower_bound', None)
-        upper_bound = parameter.get('upper_bound', None)
-
-        
-        input_parameter = {
-            param_name: {
-                "label": param_label,
-                "unit": param_unit.replace('*', ' ')
-            }
-            for param_name, param_label, param_unit in zip(
-                input_parameter_names,
-                input_parameter_label,
-                input_parameter_units
-            )
-        }
-        #input_parameter = dict(zip(input_parameter_names, [val.replace('*', ' ') for val in input_parameter_units]))
-
-        output_parameter = {
-            param_name: {
-                "label": param_label,
-                "unit": param_unit.replace('*', ' ')
-            }
-            for param_name, param_label, param_unit in zip(
-                output_parameter_names,
-                output_parameter_label,
-                output_parameter_units
-            )
-        }
-
-        output_parameter_sa_plot = {
-            param_name: {
-                "label": param_label,
-                "unit": param_unit.replace('*', ' ')
-            }
-            for param_name, param_label, param_unit in zip(
-                output_parameter_sa_plot_names,
-                output_parameter_sa_plot_label,
-                output_parameter_sa_plot_units
-            )
-        }
-        #output_parameter_sa_plot = dict(zip(output_parameter_sa_plot_names, [val.replace('*', ' ') for val in output_parameter_sa_plot_units]))
-
-    except Exception:
-        print("!!! Error: Parameter in config.txt file missing !!!")
-    
-    X_df, y_df = preprocessing(da=True, **parameter)
-        
-    input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(input_bounds, parameter)
-    print("  Creating Models: Done : ", model_names)
-    print(y_df.columns)
-    #plot_feature_distribution(y_df[output_parameter_sa_plot], output_plots, num_bins=10, is_title=False, title="Output_Distribution", num_subplots_in_row=4, figure_size='small')
-    #show_plots()
-    #surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)), is_title=False, title="Actual_vs_Predicted")
-    #show_plots()
-    plot_feature_scatterplot(pd.concat([X_df, y_df], axis=1), input_parameter, output_parameter_sa_plot, 
-                             output_plots, fig_size=(17.5/2.54, 17.5/2.54), is_title=False, title="Scatterplot Input Output")
-    show_plots() if showplot else None
-
 # Sensitivity analysis bounds or uncertainty quantification
 elif run_type == 'uq':
     print("Uncertainty Quantification")
@@ -337,6 +258,85 @@ elif run_type == 'uq':
     print("  Plotting of sa results: Done")
 
     print("Sensitivity Analysis Bounds: Done")
+
+elif run_type == 'ps':
+    print("Project Specific")
+    try:
+
+        input_parameter_names = parameter['input_parameter']
+        input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
+        input_parameter_units = parameter['input_units']
+
+        output_parameter_names = parameter['output_parameter']
+        output_parameter_label = parameter.get('output_parameter_label', parameter['output_parameter'])
+        output_parameter_units = parameter['output_units']
+
+        output_parameter_sa_plot_names = parameter['output_parameter_sa_plot']
+        output_parameter_sa_plot_label = parameter.get('output_parameter_sa_plot_label', parameter['output_parameter_sa_plot'])
+        output_parameter_sa_plot_units = parameter['output_units_sa_plot']
+
+        output_data = './output_data/' + parameter['output_name'] + '/'
+        output_plots = output_data + 'Plots/'
+        model_names = parameter['models']
+        
+        lower_bound = parameter.get('lower_bound', None)
+        upper_bound = parameter.get('upper_bound', None)
+
+        
+        input_parameter = {
+            param_name: {
+                "label": param_label,
+                "unit": param_unit.replace('*', ' ')
+            }
+            for param_name, param_label, param_unit in zip(
+                input_parameter_names,
+                input_parameter_label,
+                input_parameter_units
+            )
+        }
+        #input_parameter = dict(zip(input_parameter_names, [val.replace('*', ' ') for val in input_parameter_units]))
+
+        output_parameter = {
+            param_name: {
+                "label": param_label,
+                "unit": param_unit.replace('*', ' ')
+            }
+            for param_name, param_label, param_unit in zip(
+                output_parameter_names,
+                output_parameter_label,
+                output_parameter_units
+            )
+        }
+
+        output_parameter_sa_plot = {
+            param_name: {
+                "label": param_label,
+                "unit": param_unit.replace('*', ' ')
+            }
+            for param_name, param_label, param_unit in zip(
+                output_parameter_sa_plot_names,
+                output_parameter_sa_plot_label,
+                output_parameter_sa_plot_units
+            )
+        }
+        #output_parameter_sa_plot = dict(zip(output_parameter_sa_plot_names, [val.replace('*', ' ') for val in output_parameter_sa_plot_units]))
+
+    except Exception:
+        print("!!! Error: Parameter in config.txt file missing !!!")
+    
+    X_df, y_df = preprocessing(da=True, **parameter)
+        
+    input_bounds = get_data_bounds(X_df)
+    models, model_names = creatingModels(input_bounds, parameter)
+    print("  Creating Models: Done : ", model_names)
+    print(y_df.columns)
+    #plot_feature_distribution(y_df[output_parameter_sa_plot], output_plots, num_bins=10, is_title=False, title="Output_Distribution", num_subplots_in_row=4, figure_size='small')
+    #show_plots()
+    #surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)), is_title=False, title="Actual_vs_Predicted")
+    #show_plots()
+    plot_feature_scatterplot(pd.concat([X_df, y_df], axis=1), input_parameter, output_parameter_sa_plot, 
+                             output_plots, fig_size=(17.5/2.54, 17.5/2.54), is_title=False, title="Scatterplot Input Output")
+    show_plots() if showplot else None
 
 else:
     print('Unknown Input: ', run_type)
