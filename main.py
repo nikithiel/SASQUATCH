@@ -61,7 +61,7 @@ if run_type == 'da':
     # Optional plots
     plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter") if input(" Would you like to plot the boxplot as well?: (y/n)") == 'y' else None
     plot_data(X_df, y_df, output_plots) if input(" Would you like to plot the detailed scatterplot as well?: (y/n)") == 'y' else None
-    show_plots() showplot else None
+    show_plots() if showplot else None
     print("Analyze Data: Done")
 
 elif run_type == 'su' or run_type == 'sc':

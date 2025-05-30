@@ -20,9 +20,8 @@ from sklearn.metrics import r2_score
 from statsmodels.multivariate.manova import MANOVA
 
 ######### THESIS SPECIFIC #########
+# TODO: Update this
 thesis = True
-units_out = ['Pa', r'Pa m$^3$', r'Pa m$^3$', 'Pa']
-units_out_all = ['Pa', r'Pa m$^3$', r'Pa m$^3$', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa']
 units_in = ['mm','mm','°','mm']
 input_dict = {
     'y': r'$y_d$',
@@ -57,12 +56,18 @@ output_dict = {
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
 plt.rcParams['font.size'] = 10
+plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
 
 # Read specifically the types to be plotted from the input file
 with open('configMVUQ.txt','r') as file:
     for line in file:
-        if line.startswith('plot_type'):
+        # Read plot type
+        if line:
             splitted_line = line.split()
+        if splitted_line == []:
+            continue
+        if splitted_line[0] == 'plot_type':
+            #splitted_line = line.split()
             values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
             if len(splitted_line) > 1:
                 values = splitted_line[1:values_end]
@@ -71,6 +76,56 @@ with open('configMVUQ.txt','r') as file:
                 types = []
                 for value in values:
                     types.append(value)
+
+        # Read output units
+        if splitted_line[0] == 'output_units':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                output_units = []
+                for value in values:
+                    output_units.append(value)
+
+        # Read output labels
+        if splitted_line[0] == 'output_parameter_label':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                output_labels = []
+                for value in values:
+                    output_labels.append(value)
+
+        # Read input labels
+        if splitted_line[0] == 'input_parameter_label':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                input_labels = []
+                for value in values:
+                    input_labels.append(value)
+
+# Custom class for matplotlib scientific notation formatter. Acquired from stackoverflow.
+# Will be deleted if it ends up not being used.
+class OOMFormatter(matplotlib.ticker.ScalarFormatter):
+    def __init__(self, order=0, fformat="%1.2d", offset=True, mathText=True):
+        self.oom = order
+        self.fformat = fformat
+        matplotlib.ticker.ScalarFormatter.__init__(self,useOffset=offset,useMathText=mathText)
+    def _set_order_of_magnitude(self):
+        self.orderOfMagnitude = self.oom
+    def _set_format(self, vmin=None, vmax=None):
+        self.format = self.fformat
+        if self._useMathText:
+            self.format = r'$\mathdefault{%s}$' % self.format
 
 class ScalarFormatterForceFormat(ScalarFormatter):
     def _set_format(self, vmin=None, vmax=None):
@@ -231,12 +286,13 @@ def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, i
     fig, axes = plt.subplots(num_cols, num_rows, figsize=fig_size)
     axes = axes.flatten()
 
+    k = 0
     for i, col in enumerate(num_columns):
         axes[i].hist(df[col], bins=num_bins)
 
-        if output_units is not None and col in output_units:
-            xlabel = f"{col} in {output_units[col]}"
-            axes[i].set_xlabel(xlabel, labelpad=12)
+        if output_units is not None:
+            axes[i].set_xlabel(output_units[k], labelpad=12)
+            k += 1
         else:
             axes[i].set_xlabel(col)
         if i % num_rows == 0:
@@ -346,7 +402,7 @@ def plot_data(X_df, y_df, output_path, is_title=True, title="Pairplot of Data"):
         - title: str -> title of plot / name of saved figure
     """
     # Create a DataFrame combining selected features and outputs
-    sns.pairplot( pd.concat([X_df, y_df], axis=1))
+    sns.pairplot( pd.concat([X_df, y_df], axis=1), y_vars= output_labels, x_vars= input_labels)
     save_plot(plt, output_path + title, dpi=600)
 
 def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_parameter, output_units, is_title=True, title="Surrogate Model Comparison"):
@@ -559,19 +615,31 @@ def plot_boxplots(X_df, y_df, output_path, is_title=True, title="Boxplots of Dat
     """
     num_columns = int(math.sqrt(y_df.shape[1])) + 1
     fig, axes = plt.subplots(nrows=num_columns, ncols=num_columns, figsize=(10,10))
+    plt.ticklabel_format(axis='y', style='sci', scilimits= (-2,2))
 
-    information = ['in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...']
     i = 0
     j = 0
+    k = 0 # Counter for labels
     for _, column in enumerate(y_df.columns):
         ax = axes[i][j] if num_columns > 1 else axes
-        ax.set_title(column)
+        #ax.yaxis.set_major_formatter(FormatStrFormatter('%1.2e'))
+        ax.set_title(output_labels[k])
         ax.boxplot(y_df[column])
-        #ax.set_ylabel('Values '+information[i])
+        ax.set_ylabel('Values in '+ output_units[k])
         ax.set_xticklabels([], rotation=0)
         if j < num_columns - 1:
             j += 1
         elif j == num_columns - 1:
+            i += 1
+            j = 0
+        k += 1
+    
+    # Delete all remaining empty subplots
+    if j != num_columns - 1: 
+        while i <= num_columns - 1:
+            while j <= num_columns - 1:
+                axes[i][j].set_axis_off()
+                j += 1 
             i += 1
             j = 0
 
@@ -579,7 +647,7 @@ def plot_boxplots(X_df, y_df, output_path, is_title=True, title="Boxplots of Dat
     plt.tight_layout()
     save_plot(plt, output_path + title)
 
-def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation Matrix of Dataframe"):
+def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation Matrix"):
     """Plots and saves the correlation matrix of a dataframe.
     Args:
         - X_df: dataFrame -> contains the data for inputs
@@ -593,7 +661,7 @@ def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation 
 
     # Create a heatmap of the correlation matrix
     plt.figure(figsize=(10.,10.))
-    sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f")
+    sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f", xticklabels = output_labels, yticklabels = output_labels)
     plt.title(title if is_title else None)
     plt.xticks(rotation=45)
     save_plot(plt, output_path + title)

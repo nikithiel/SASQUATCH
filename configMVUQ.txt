@@ -5,7 +5,7 @@ run_type da
 data_path Data_example.csv
 output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
 output_units Pa Pa*m$^3$ Pa*m$^3$ Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa
-output_parameter_label WSS Eloss Ekin TVPG WSS$_1$ WSS$_2$ WSS$_3$ WSS$_4$ WSS$_5$ WSS$_6$ WSS$_7$ WSS$_8$ WSS$_9$ WSS$_{10}$ WSS$_{11}$ WSS$_{12}$ WSS$_{13}$ WSS$_{14}$ WSS$_{15}$ WSS$_{16}$ WSS$_{17}$
+output_parameter_label WSS $E_{loss}$ $E_{kin}$ TVPG WSS$_1$ WSS$_2$ WSS$_3$ WSS$_4$ WSS$_5$ WSS$_6$ WSS$_7$ WSS$_8$ WSS$_9$ WSS$_{10}$ WSS$_{11}$ WSS$_{12}$ WSS$_{13}$ WSS$_{14}$ WSS$_{15}$ WSS$_{16}$ WSS$_{17}$
 output_name MV_UQ 
 
 input_parameter y z alpha R
