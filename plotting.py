@@ -20,6 +20,7 @@ from sklearn.metrics import r2_score
 from statsmodels.multivariate.manova import MANOVA
 
 ######### THESIS SPECIFIC #########
+# TODO: Update this
 thesis = True
 units_in = ['mm','mm','°','mm']
 input_dict = {
