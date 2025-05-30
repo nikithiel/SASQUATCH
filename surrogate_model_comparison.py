@@ -23,7 +23,7 @@ def kFold_Evaluation(X, y, models, parameter):
         dataFrame -> contains results of R2Score, Timings, MAE, and RMSE
     """
 
-    # save a lot of code complexity
+    # Save a lot of code complexity
     n_splits = parameter['n_splits']
     shuffle= parameter['shuffle']
     random_state = parameter['random_state']

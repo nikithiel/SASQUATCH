@@ -58,6 +58,20 @@ plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
 plt.rcParams['font.size'] = 10
 
+# Read specifically the types to be plotted from the input file
+with open('configMVUQ.txt','r') as file:
+    for line in file:
+        if line.startswith('plot_type'):
+            splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                types = []
+                for value in values:
+                    types.append(value)
+
 class ScalarFormatterForceFormat(ScalarFormatter):
     def _set_format(self, vmin=None, vmax=None):
 
@@ -333,7 +347,7 @@ def plot_data(X_df, y_df, output_path, is_title=True, title="Pairplot of Data"):
     """
     # Create a DataFrame combining selected features and outputs
     sns.pairplot( pd.concat([X_df, y_df], axis=1))
-    save_plot(plt, output_path + title)
+    save_plot(plt, output_path + title, dpi=600)
 
 def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_parameter, output_units, is_title=True, title="Surrogate Model Comparison"):
     """Plots and saves the model comparison (actual vs predicted).
@@ -543,20 +557,27 @@ def plot_boxplots(X_df, y_df, output_path, is_title=True, title="Boxplots of Dat
         - output_path: str -> path to save the plot
         - title: str -> title of plot and name of saved figure
     """
-    num_columns = y_df.shape[1]
-    fig, axes = plt.subplots(nrows=1, ncols=num_columns, figsize=(8,4))
+    num_columns = int(math.sqrt(y_df.shape[1])) + 1
+    fig, axes = plt.subplots(nrows=num_columns, ncols=num_columns, figsize=(10,10))
 
     information = ['in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...']
-    for i, column in enumerate(y_df.columns):
-        ax = axes[i] if num_columns > 1 else axes
+    i = 0
+    j = 0
+    for _, column in enumerate(y_df.columns):
+        ax = axes[i][j] if num_columns > 1 else axes
+        ax.set_title(column)
         ax.boxplot(y_df[column])
-        ax.set_ylabel('Values '+information[i])
-        ax.set_xticklabels([column], rotation=0)
+        #ax.set_ylabel('Values '+information[i])
+        ax.set_xticklabels([], rotation=0)
+        if j < num_columns - 1:
+            j += 1
+        elif j == num_columns - 1:
+            i += 1
+            j = 0
 
     plt.suptitle(title if is_title else None)
-    #plt.tight_layout()
+    plt.tight_layout()
     save_plot(plt, output_path + title)
-    plt.show()
 
 def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation Matrix of Dataframe"):
     """Plots and saves the correlation matrix of a dataframe.
@@ -571,13 +592,13 @@ def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation 
     correlation_matrix = df_combined.corr()
 
     # Create a heatmap of the correlation matrix
-    plt.figure(figsize=get_figsize())
+    plt.figure(figsize=(10.,10.))
     sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f")
     plt.title(title if is_title else None)
     plt.xticks(rotation=45)
     save_plot(plt, output_path + title)
 
-def save_plot(plt, file_path):
+def save_plot(plt, file_path, dpi=None):
     """Saves a plot.
     Args:
         - plt: plt -> the specific plot
@@ -588,10 +609,13 @@ def save_plot(plt, file_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    # save figure
-    plt.savefig(file_path + ".svg", format='svg', bbox_inches='tight')
-    plt.savefig(file_path + ".png")
-    plt.savefig(file_path + ".pdf")
+    # Save figures
+    print("   Plots being saved as type: ", types)
+    for type in types:
+        if dpi:
+            plt.savefig(file_path + '.' + type, format=type, bbox_inches='tight', dpi=dpi)
+        else:
+            plt.savefig(file_path + '.' + type, format=type, bbox_inches='tight')
 
 def get_figsize():
     """Returns the standard figure size
@@ -780,7 +804,7 @@ def actual_scatter_plot(X_df, y_df, output_path, is_title=True, title="Pairplot 
     plt.rcParams['mathtext.fontset'] = 'stix'
     plt.rcParams['font.family'] = 'STIXGeneral'
     plt.rcParams['font.size'] = 10
-    fig, axes = plt.subplots(plot_size, plot_size, figsize=(20.,20.))
+    fig, axes = plt.subplots(y_df.shape[1], X_df.shape[1], figsize=(50.,50.))
     i = 0
     j = 0
 
@@ -788,16 +812,12 @@ def actual_scatter_plot(X_df, y_df, output_path, is_title=True, title="Pairplot 
         for names2, values2 in X_df.items():
             if j == 0:
                 axes[i][j].set_ylabel(names, fontsize=30)
-            if i == 6:
-                if names2 == 'rpm':
-                    axes[i][j].set_xlabel('ECMOrpm', fontsize= 30)
-                else:
-                    axes[i][j].set_xlabel(names2, fontsize=30)
-
+            if i == y_df.shape[1] - 1:
+                axes[i][j].set_xlabel(names2, fontsize=30)
             axes[i][j].scatter(X_df[names2].values, y_df[names].values, marker='.')
             j += 1
         i += 1
         j = 0
 
     fig.tight_layout()
-    save_plot(plt, output_path + title)
+    save_plot(plt=plt, file_path=output_path + title, dpi=600)
