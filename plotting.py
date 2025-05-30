@@ -85,9 +85,9 @@ with open('configMVUQ.txt','r') as file:
                 values = splitted_line[1:values_end]
 
                 # Store the values as a list
-                output_units = []
+                output_unit_list = []
                 for value in values:
-                    output_units.append(value)
+                    output_unit_list.append(value)
 
         # Read output labels
         if splitted_line[0] == 'output_parameter_label':
@@ -97,9 +97,9 @@ with open('configMVUQ.txt','r') as file:
                 values = splitted_line[1:values_end]
 
                 # Store the values as a list
-                output_labels = []
+                output_label_list = []
                 for value in values:
-                    output_labels.append(value)
+                    output_label_list.append(value)
 
         # Read input labels
         if splitted_line[0] == 'input_parameter_label':
@@ -109,9 +109,9 @@ with open('configMVUQ.txt','r') as file:
                 values = splitted_line[1:values_end]
 
                 # Store the values as a list
-                input_labels = []
+                input_label_list = []
                 for value in values:
-                    input_labels.append(value)
+                    input_label_list.append(value)
 
 # Custom class for matplotlib scientific notation formatter. Acquired from stackoverflow.
 # Will be deleted if it ends up not being used.
@@ -290,8 +290,8 @@ def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, i
     for i, col in enumerate(num_columns):
         axes[i].hist(df[col], bins=num_bins)
 
-        if output_units is not None:
-            axes[i].set_xlabel(output_units[k], labelpad=12)
+        if output_unit_list is not None:
+            axes[i].set_xlabel(output_unit_list[k], labelpad=12)
             k += 1
         else:
             axes[i].set_xlabel(col)
@@ -402,7 +402,12 @@ def plot_data(X_df, y_df, output_path, is_title=True, title="Pairplot of Data"):
         - title: str -> title of plot / name of saved figure
     """
     # Create a DataFrame combining selected features and outputs
-    sns.pairplot( pd.concat([X_df, y_df], axis=1), y_vars= output_labels, x_vars= input_labels)
+    pairplot = sns.pairplot( pd.concat([X_df, y_df], axis=1))
+    pairplot.x_vars = input_label_list + output_label_list
+    pairplot.y_vars = input_label_list + output_label_list
+    pairplot._add_axis_labels()
+    for ax in pairplot.axes.flatten():
+        ax.ticklabel_format(style='sci', scilimits=(0,0), axis='both')
     save_plot(plt, output_path + title, dpi=600)
 
 def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_parameter, output_units, is_title=True, title="Surrogate Model Comparison"):
@@ -614,8 +619,8 @@ def plot_boxplots(X_df, y_df, output_path, is_title=True, title="Boxplots of Dat
         - title: str -> title of plot and name of saved figure
     """
     num_columns = int(math.sqrt(y_df.shape[1])) + 1
+    #plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
     fig, axes = plt.subplots(nrows=num_columns, ncols=num_columns, figsize=(10,10))
-    plt.ticklabel_format(axis='y', style='sci', scilimits= (-2,2))
 
     i = 0
     j = 0
@@ -623,9 +628,10 @@ def plot_boxplots(X_df, y_df, output_path, is_title=True, title="Boxplots of Dat
     for _, column in enumerate(y_df.columns):
         ax = axes[i][j] if num_columns > 1 else axes
         #ax.yaxis.set_major_formatter(FormatStrFormatter('%1.2e'))
-        ax.set_title(output_labels[k])
+        ax.set_title(output_label_list[k])
+        ax.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
         ax.boxplot(y_df[column])
-        ax.set_ylabel('Values in '+ output_units[k])
+        ax.set_ylabel('Values in '+ output_unit_list[k])
         ax.set_xticklabels([], rotation=0)
         if j < num_columns - 1:
             j += 1
@@ -661,7 +667,7 @@ def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation 
 
     # Create a heatmap of the correlation matrix
     plt.figure(figsize=(10.,10.))
-    sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f", xticklabels = output_labels, yticklabels = output_labels)
+    sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f", xticklabels = input_label_list + output_label_list, yticklabels = input_label_list + output_label_list)
     plt.title(title if is_title else None)
     plt.xticks(rotation=45)
     save_plot(plt, output_path + title)
