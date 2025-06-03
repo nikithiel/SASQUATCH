@@ -54,3 +54,14 @@ def get_data_bounds(df):
     # calculate bounds of each column in df
     dict_of_bounds = df.describe().loc[['min', 'max']].to_dict()
     return dict_of_bounds
+
+def get_custom_bounds(df, startType, perturbation, start=None):
+
+    if startType == 'average':
+        df_average = df.copy()
+        df_average.loc['average'] = df_average.mean(axis=0)
+        df_average.loc['upper'] = df.loc['average'].mul(1 + (perturbation / 100)).round(2)
+        df_average.loc['lower'] = df.loc['average'].mul(1 - (perturbation / 100)).round(2)
+
+    for i, names in df.items():
+        #TODO :Filter the dataframe here 
