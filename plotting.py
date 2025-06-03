@@ -20,9 +20,8 @@ from sklearn.metrics import r2_score
 from statsmodels.multivariate.manova import MANOVA
 
 ######### THESIS SPECIFIC #########
+# TODO: Update this
 thesis = True
-units_out = ['Pa', r'Pa m$^3$', r'Pa m$^3$', 'Pa']
-units_out_all = ['Pa', r'Pa m$^3$', r'Pa m$^3$', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa', 'Pa']
 units_in = ['mm','mm','°','mm']
 input_dict = {
     'y': r'$y_d$',
@@ -57,16 +56,97 @@ output_dict = {
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral' 
 plt.rcParams['font.size'] = 10
+plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
+
+# Read specifically the types to be plotted from the input file
+with open('configMVUQ.txt','r') as file:
+    for line in file:
+        # Read plot type
+        if line:
+            splitted_line = line.split()
+        if splitted_line == []:
+            continue
+        if splitted_line[0] == 'plot_type':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                types = []
+                for value in values:
+                    types.append(value)
+
+        # Read output units
+        if splitted_line[0] == 'output_units':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                output_unit_list = []
+                for value in values:
+                    output_unit_list.append(value)
+
+        # Read output labels
+        if splitted_line[0] == 'output_parameter_label':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                output_label_list = []
+                for value in values:
+                    output_label_list.append(value)
+
+        # Read input units
+        if splitted_line[0] == 'input_units':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                input_unit_list = []
+                for value in values:
+                    input_unit_list.append(value)
+
+        # Read input labels
+        if splitted_line[0] == 'input_parameter_label':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                input_label_list = []
+                for value in values:
+                    input_label_list.append(value)
+
+# Custom class for matplotlib scientific notation formatter. Acquired from stackoverflow.
+# Will be deleted if it ends up not being used.
+class OOMFormatter(matplotlib.ticker.ScalarFormatter):
+    def __init__(self, order=0, fformat="%1.2d", offset=True, mathText=True):
+        self.oom = order
+        self.fformat = fformat
+        matplotlib.ticker.ScalarFormatter.__init__(self,useOffset=offset,useMathText=mathText)
+    def _set_order_of_magnitude(self):
+        self.orderOfMagnitude = self.oom
+    def _set_format(self, vmin=None, vmax=None):
+        self.format = self.fformat
+        if self._useMathText:
+            self.format = r'$\mathdefault{%s}$' % self.format
 
 class ScalarFormatterForceFormat(ScalarFormatter):
     def _set_format(self, vmin=None, vmax=None):
-        
+
         self.format = "%1.1f"  # Force one decimal place in the tick labels.
 
 def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=None, metrics=['r2_score', 'RMSE', 'MAPE'], \
                                 is_title=True, title="Surrogate Model Comparison Plots", average_output=False, rmse_log_scale=False, figure_size = (6.5,4)):
     """Plots and saves the R2 score and Errors.
-
     Args:
         - df: dataFrame -> contains sc result data
         - output_parameter: list -> list of strings of output_parameter
@@ -80,14 +160,14 @@ def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=
     output_parameters = []
     if isinstance(metrics, str):
         metrics = [metrics]
-        
+
     for prefix in metrics:
         for suffix in output_parameter:
             output_parameters.append(prefix + '_' + suffix)
-    
+
     df_melted = pd.melt(df, id_vars=['Fold', 'Model', 'Timing'], 
                         value_vars=output_parameters, var_name='Output Parameter', value_name='Value')
-    
+
     # Calculate mean R2 scores and RMSE for each Model and Metric
     mean_scores = df_melted.groupby(['Model', 'Output Parameter'])['Value'].mean().reset_index()
     mean_scores['Value'] = mean_scores['Value'].apply(lambda x: 0 if x < 0 else x)
@@ -105,14 +185,14 @@ def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=
         # remove metric string (RMSE, MAE, r2_score) for legend
         for metric_in_metrics in metrics:
             filtered_df['Output Parameter'] = filtered_df['Output Parameter'].str.replace(metric_in_metrics + '_', '')
-        
+
         average_values = filtered_df.groupby('Model')['Value'].mean().reset_index()
 
         # Merge the average values back to the filtered_df DataFrame and sort
         filtered_df = pd.merge(filtered_df, average_values.rename(columns={'Value': 'output_average'}), on='Model')
         filtered_df = filtered_df.sort_values(by='output_average', ascending= metric!='r2_score')
         if not average_output: filtered_df = filtered_df.sort_values(by=['output_average', 'Model', 'Value'], ascending=metric!='r2_score')
-                        
+
         metric_title = metric
         if metric == 'r2_score': metric_title=r'R$^2$ Score'
         if metric == 'MAPE': metric_title='MAPE in %'
@@ -148,9 +228,8 @@ def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=
     plt.tight_layout()
     save_plot(plt, output_path + title)
 
-def plot_densitys(X_dict, Y_dict, output_path, lables=None, is_title=True, title="Densities plot"):
+def plot_densities(X_dict, Y_dict, output_path, lables=None, is_title=True, title="Densities plot"):
     """Plots and saves the distribution of each feature of the DataFrame.
-
     Args:
         - X_dict: dict -> Dictionary containing arrays for each model's test results
         - Y_dict: dict -> Dictionary containing labels for each model
@@ -178,18 +257,18 @@ def plot_densitys(X_dict, Y_dict, output_path, lables=None, is_title=True, title
                 if i%num_cols==0: axes[i].set_ylabel('Density')
             except:
                 pass
-            
+
         axes[i].set_xlabel(output_dict[lables[i]]+" in "+units_out_all[i])
-        
+
     # Hide unused subplots   
     for j in range(num_plots, len(axes)):
         axes[j].axis('off')
-        
+
     for handle, data in zip(handles, Y_dict.values()):
         #handle.set_color(axes[0].lines[Y_dict.keys().index(data)].get_color())
         #handle.set_color(axes[0].get_color())
         handle.set_color(handle.get_color())
-        
+
     fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.01), loc='upper center', ncol=len(Y_dict))    
 
     plt.suptitle(title if is_title else None)
@@ -198,7 +277,6 @@ def plot_densitys(X_dict, Y_dict, output_path, lables=None, is_title=True, title
 
 def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, is_title=True, title="Plot of Feature Distributions", num_subplots_in_row=3, figure_size='large'):
     """Plots and saves the distribution of each feature of the dataFrame.
-
     Args:
         - df: dataFrame -> contains data
         - output_path: str -> path to save the plot
@@ -220,12 +298,14 @@ def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, i
     fig, axes = plt.subplots(num_cols, num_rows, figsize=fig_size)
     axes = axes.flatten()
 
+    k = 0
     for i, col in enumerate(num_columns):
         axes[i].hist(df[col], bins=num_bins)
 
-        if output_units is not None and col in output_units:
-            xlabel = f"{col} in {output_units[col]}"
-            axes[i].set_xlabel(xlabel, labelpad=12)
+        if output_unit_list is not None:
+            axes[i].set_xlabel(output_unit_list[k], labelpad=12)
+            axes[i].set_title(output_label_list[k], pad=12)
+            k += 1
         else:
             axes[i].set_xlabel(col)
         if i % num_rows == 0:
@@ -234,7 +314,7 @@ def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, i
     # Hide unused subplots
     for j in range(num_plots, len(axes)):
         axes[j].axis('off')
-    
+
     plt.suptitle(title if is_title else None)
     plt.tight_layout()
     save_plot(plt, output_path + title)
@@ -276,7 +356,7 @@ def plot_feature_scatterplot(df, x_cols, y_cols, output_path, fig_size=(6.5, 6.5
         IQR = Q3 - Q1
         lower_bound = Q1 - 1.5 * IQR
         upper_bound = Q3 + 1.5 * IQR
-        
+
         outlier_mask = (df[y_col] < lower_bound) | (df[y_col] > upper_bound)
 
         for j, x_col in enumerate(x_cols):
@@ -292,7 +372,7 @@ def plot_feature_scatterplot(df, x_cols, y_cols, output_path, fig_size=(6.5, 6.5
 
             if i == len(x_cols)-1: ax.set_xlabel(x_cols[x_col]['label'] + " in " + x_cols[x_col]['unit'])
             if j == 0: ax.set_ylabel(y_cols[y_col]['label'] + " in " + y_cols[y_col]['unit'])
-      
+
             if is_title:
                 ax.set_title(f"{title} - {x_cols[x_col]['label']} vs {y_cols[y_col]['label']}")
 
@@ -306,7 +386,6 @@ def plot_feature_scatterplot(df, x_cols, y_cols, output_path, fig_size=(6.5, 6.5
 
 def plot_smc_timings(df, output_path, is_title=True, title="Boxplot of Timings of All Folds of Each Model"):
     """Plots and saves the training and testing timings.
-
     Args:
         - df: dataFrame -> contains sc result data
         - output_path: str -> path to save the plot
@@ -329,7 +408,6 @@ def plot_smc_timings(df, output_path, is_title=True, title="Boxplot of Timings o
 
 def plot_data(X_df, y_df, output_path, is_title=True, title="Pairplot of Data"):
     """Plots and saves the pairplot of data.
-
     Args:
         - X_df: dataFrame -> contains input data
         - y_df: dataFrame -> contains output data
@@ -337,12 +415,16 @@ def plot_data(X_df, y_df, output_path, is_title=True, title="Pairplot of Data"):
         - title: str -> title of plot / name of saved figure
     """
     # Create a DataFrame combining selected features and outputs
-    sns.pairplot( pd.concat([X_df, y_df], axis=1))
-    save_plot(plt, output_path + title)
+    pairplot = sns.pairplot( pd.concat([X_df, y_df], axis=1))
+    pairplot.x_vars = input_label_list + output_label_list
+    pairplot.y_vars = input_label_list + output_label_list
+    pairplot._add_axis_labels()
+    for ax in pairplot.axes.flatten():
+        ax.ticklabel_format(style='sci', scilimits=(0,0), axis='both')
+    save_plot(plt, output_path + title, dpi=600)
 
 def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_parameter, output_units, is_title=True, title="Surrogate Model Comparison"):
     """Plots and saves the model comparison (actual vs predicted).
-
     Args:
         models (dict): Contains the models.
         X_df (DataFrame): Input data.
@@ -357,7 +439,7 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_
     # Determine number of outputs
     output_columns = y_df[output_parameter].columns
     n = len(output_columns)
-    
+
     if n == 1:
         fig, ax = plt.subplots(figsize=(6.5, 5))
         axs = [ax]
@@ -366,7 +448,7 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_
         nrows = math.ceil(n / 2)
         fig, axs_array = plt.subplots(nrows, 2, figsize=(6.5, 5 * nrows / 2))
         axs = list(axs_array.flatten())
-    
+
     # Plot each output
     for i, output_name in enumerate(output_columns):
         for model_name, model in models.items():
@@ -377,7 +459,9 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_
                            label=model_name, marker='o', s=8)
         axs[i].plot(y_df.iloc[:, i], y_df.iloc[:, i],
                     label='Actual', c='black', linewidth=1.0)
-        
+
+        axs[i].ticklabel_format(axis='both', style='sci', scilimits=(0,0))
+
         # Label axes: bottom row gets the x-label; left column gets the y-label
         row, col = divmod(i, 2)
 
@@ -392,25 +476,27 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_
                     axs[i].set_xlabel('Actual Values')
             else:
                 axs[i].set_xlabel('Actual Values')
-                
+
         # The y-label is set for the left column
         if col == 0:
             axs[i].set_ylabel('Predicted Values')
-            
+
+        combined_labels = input_label_list + output_label_list
+        combined_units = input_unit_list + output_unit_list
         if is_title:
-            axs[i].set_title(f'{output_name} in {output_units[output_name]}')
+            axs[i].set_title(f'{combined_labels[i]} in {combined_units[i]}')
 
         axs[i].grid(False)
-    
+
     # For odd number of outputs (n > 1), remove the extra axis
     if n % 2 == 1 and n > 1:
         extra_axis = axs.pop()
         extra_axis.remove()
-    
+
     # Reserve more space on the right for the legend
     # The rect parameter (left, bottom, right, top) here reserves only 75% of the width for subplots
     plt.tight_layout(rect=[0, 0, 0.83, 1])
-    
+
     # Re-center the last subplot if n is odd
     if n % 2 == 1 and n > 1:
         last_axis = axs[-1]
@@ -421,7 +507,7 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_
         center = (subplot_left + subplot_right) / 2
         new_x0 = center - pos.width / 2
         last_axis.set_position([new_x0, pos.y0, pos.width, pos.height])
-    
+
     # Place the legend
     # Use the top-right axis from the first row (if available) as a reference
     if n > 1:
@@ -434,7 +520,7 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_
     legend_y = pos_top_right.y1 + 0.015
     handles, labels = axs[0].get_legend_handles_labels()
     fig.legend(handles, labels, bbox_to_anchor=(legend_x, legend_y), loc='upper left')
-    
+
     save_plot(plt, output_path + title)
 
 def show_plots():
@@ -443,7 +529,6 @@ def show_plots():
 
 def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, output_parameter_sa_plot, output_path, sa_sobol_indice):
     """Plots and saves the sensitivity heatmap.
-
     Args:
         - sa_results: dict -> contains sensitivity analysis results
         - model_names: list -> list of names of models
@@ -481,7 +566,6 @@ def plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, outpu
 
 def plot_sa_results_17_segments(sa_results_dict, input_names, output_path, sa_17_segment_model, sa_sobol_indice):
     """Plots and saves the 17-segments plot.
-
     Args:
         - sa_results_dict: dataFrame -> contains sensitivity analysis results
         - input_names: list -> list of str with names of inputs
@@ -502,10 +586,10 @@ def plot_sa_results_17_segments(sa_results_dict, input_names, output_path, sa_17
         for (output_name, output_dict) in sa_results_dict[sa_17_segment_model].items():
             segment_data[output_name] = output_dict[sa_sobol_indice][k]
         segment_count = 0
-        
+
         # for each ring in the plot
         for i, radius in enumerate(radii):      
-            
+
             # for each segment in a ring
             for j in range(num_segments[i]):
                 segment_count = segment_count + 1
@@ -545,31 +629,49 @@ def plot_sa_results_17_segments(sa_results_dict, input_names, output_path, sa_17
 
 def plot_boxplots(X_df, y_df, output_path, is_title=True, title="Boxplots of Dataframe"):
     """Plots and saves the boxplot of a dataframe.
-
     Args:
         - X_df: DataFrame -> contains the data for inputs
         - y_df: DataFrame -> contains the data for boxplots
         - output_path: str -> path to save the plot
         - title: str -> title of plot and name of saved figure
     """
-    num_columns = y_df.shape[1]
-    fig, axes = plt.subplots(nrows=1, ncols=num_columns, figsize=(8,4))
-    
-    information = ['in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...','in ...', 'in ...', 'in ...', 'in ...']
-    for i, column in enumerate(y_df.columns):
-        ax = axes[i] if num_columns > 1 else axes
+    num_columns = int(math.sqrt(y_df.shape[1])) + 1
+    #plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
+    fig, axes = plt.subplots(nrows=num_columns, ncols=num_columns, figsize=(10,10))
+
+    i = 0
+    j = 0
+    k = 0 # Counter for labels
+    for _, column in enumerate(y_df.columns):
+        ax = axes[i][j] if num_columns > 1 else axes
+        #ax.yaxis.set_major_formatter(FormatStrFormatter('%1.2e'))
+        ax.set_title(output_label_list[k])
+        ax.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
         ax.boxplot(y_df[column])
-        ax.set_ylabel('Values '+information[i])
-        ax.set_xticklabels([column], rotation=0)
+        ax.set_ylabel('Values in '+ output_unit_list[k])
+        ax.set_xticklabels([], rotation=0)
+        if j < num_columns - 1:
+            j += 1
+        elif j == num_columns - 1:
+            i += 1
+            j = 0
+        k += 1
+    
+    # Delete all remaining empty subplots
+    if j != num_columns - 1: 
+        while i <= num_columns - 1:
+            while j <= num_columns - 1:
+                axes[i][j].set_axis_off()
+                j += 1 
+            i += 1
+            j = 0
 
     plt.suptitle(title if is_title else None)
-    #plt.tight_layout()
+    plt.tight_layout()
     save_plot(plt, output_path + title)
-    plt.show()
 
-def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation Matrix of Dataframe"):
+def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation Matrix"):
     """Plots and saves the correlation matrix of a dataframe.
-
     Args:
         - X_df: dataFrame -> contains the data for inputs
         - y_df: dataFrame -> contains the data for outputs
@@ -579,16 +681,16 @@ def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation 
     # Compute the correlation matrix
     df_combined = pd.concat([X_df, y_df], axis=1)
     correlation_matrix = df_combined.corr()
-    
+
     # Create a heatmap of the correlation matrix
-    plt.figure(figsize=get_figsize())
-    sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f")
+    plt.figure(figsize=(10.,10.))
+    sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f", xticklabels = input_label_list + output_label_list, yticklabels = input_label_list + output_label_list)
     plt.title(title if is_title else None)
+    plt.xticks(rotation=45)
     save_plot(plt, output_path + title)
 
-def save_plot(plt, file_path):
+def save_plot(plt, file_path, dpi=None):
     """Saves a plot.
-
     Args:
         - plt: plt -> the specific plot
         - file_path: str -> path where to save the plot
@@ -597,12 +699,15 @@ def save_plot(plt, file_path):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
-        
-    # save figure
-    plt.savefig(file_path + ".svg", format='svg', bbox_inches='tight')
-    plt.savefig(file_path + ".png")
-    plt.savefig(file_path + ".pdf")
-    
+
+    # Save figures
+    print("   Plots being saved as type: ", types)
+    for type in types:
+        if dpi:
+            plt.savefig(file_path + '.' + type, format=type, bbox_inches='tight', dpi=dpi)
+        else:
+            plt.savefig(file_path + '.' + type, format=type, bbox_inches='tight')
+
 def get_figsize():
     """Returns the standard figure size
     
@@ -613,7 +718,6 @@ def get_figsize():
 
 def bounds_variation_plot(data, output_parameter, output_path, is_title=True, title="Bounds Variation plot", x_annot="Input Variation", y_annot="Output Variation", legend=True):
     """Plots and saves the distribution of each feature of the DataFrame.
-
     Args:
         - X_dict: dict -> Dictionary containing arrays for each model's test results
         - Y_dict: dict -> Dictionary containing labels for each model
@@ -623,16 +727,16 @@ def bounds_variation_plot(data, output_parameter, output_path, is_title=True, ti
     """
     uncertainties = sorted(data.keys())
     param_names = output_parameter
-    
+
     num_plots = len(data[uncertainties[0]])
-    
+
     # Custom color palette
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
     gray_palette = plt.cm.gray(np.linspace(0.1, 0.8, 17))  # Varying shades of gray
     custom_palette = colors + list(gray_palette)
-    
+
     fig, ax = plt.subplots(figsize=(3.5,4.5))#get_figsize())
-    
+
     for i in range(num_plots, 0,-1):
         output_variation = []
         for uncertainty in uncertainties:
@@ -644,9 +748,9 @@ def bounds_variation_plot(data, output_parameter, output_path, is_title=True, ti
     ax.yaxis.set_label_position('left')
     ax.yaxis.set_ticks_position('both')
     ax.yaxis.set_tick_params(right=True)
-    
+
     if legend: ax.legend(loc='center left', bbox_to_anchor=(1.01, 0.5), fontsize='small')
-    
+
     plt.title(title if is_title else None)
     plt.tight_layout()
     save_plot(plt, output_path + title)
@@ -662,7 +766,7 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
     uncertainties = sorted(data.keys())
     num_params = len(output_parameters)
     num_plots = len(data[uncertainties[0]][model][0])
-    
+
     fig, axes = plt.subplots(num_params if all_in_one == False else 1, 1, figsize=figsize)
     if num_params < 10: colors = plt.get_cmap('tab10').colors
     else: colors = plt.get_cmap('tab20').colors
@@ -695,7 +799,7 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
             if annotation == 'all': ax.text(x, mean_val, f'Mean={format_value(mean_val)}\nStd={format_value(std_val)}\n{std}={100*std_val/mean_val:.2f}%', ha='center', va='bottom')
             if annotation == 'pstd' and j == len(uncertainties)-1: ax.text(x, mean_val, f'{std}={100*std_val/mean_val:.2f}%', ha='center', va='bottom')
             if annotation == 'legend' and j == len(uncertainties)-1: ax.text(x, mean_val, f'{output_dict[output_names[i]]}, {std}={100*std_val/mean_val:.2f}%', ha='center', va='bottom')
-            
+
     # Title and other adjustments
     fig.suptitle(title if is_title else None)
     plt.tight_layout()
@@ -703,14 +807,14 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
 
 def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP', sobol_index='ST', 
                  fig_size=(6.5, 9), font_size=10, is_title=True, title="Bounds sobol", x_annot="Input Variation", y_annot="Sensitivity"):    
-    
+
     plt.rcParams['mathtext.fontset'] = 'stix'
     plt.rcParams['font.family'] = 'STIXGeneral'
     plt.rcParams['font.size'] = font_size
-    
+
     uncertainty_values_to_plot = list(data.keys())  # Uncertainty values to plot
     output_names = list(data[uncertainty_values_to_plot[0]][model_name].keys())
-    
+
     num_cols = 3
     num_rows = (len(output_names) + 2) // num_cols  # Determine number of rows for subplots
     fig, axes = plt.subplots(num_rows, num_cols, figsize=fig_size)
@@ -720,7 +824,7 @@ def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP'
                     right=0.975, hspace=0.7)
     transformation = [3, 0, 13, 17, 18, 20, 7, 8, 9, 16, 1, 2, 11, 10, 19, 4, 12, 14, 15, 5, 6]
     outputs_transformed = [output_names[i] for i in transformation]
-    
+
     for i, output in enumerate(output_names):
         row = i // num_cols
         col = i % num_cols
@@ -739,7 +843,7 @@ def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP'
         if round((i-1)/num_cols) == num_rows-1: ax.set_xlabel("Variation in mm")
         #if round((i-1)/num_cols) == num_rows-1: ax.set_xlabel(" ")
         ax.grid(True)
-    
+
     fig.legend(labels=input_labels, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(input_labels))
     plt.suptitle(title if is_title else None, fontsize=font_size)
     #plt.tight_layout()#h_pad=0, w_pad=0)
@@ -749,7 +853,6 @@ def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP'
 # Print functions
 def print_column_stats(df):
     """Prints important statistics about each column in a DataFrame.
-
     Args:
     - df: DataFrame -> contains data
     """
@@ -767,7 +870,7 @@ def print_column_stats(df):
         # Add other relevant information as needed
 
         print("\n")
-        
+
 def print_dict_stats(dict, model, id='none'):
     model_return = model
     for i, (model, values) in enumerate(dict.items()):
@@ -790,26 +893,27 @@ def actual_scatter_plot(X_df, y_df, output_path, is_title=True, title="Pairplot 
 
     plot_size = max(X_df.shape[1], y_df.shape[1])
     plt.rcParams['mathtext.fontset'] = 'stix'
-    plt.rcParams['font.family'] = 'STIXGeneral'
-    plt.rcParams['font.size'] = 10
-    fig, axes = plt.subplots(plot_size, plot_size, figsize=(20.,20.))
+    plt.rcParams['font.family'] = 'ST'
+    plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
+    fig, axes = plt.subplots(y_df.shape[1], X_df.shape[1], figsize=(50.,50.))
     i = 0
     j = 0
-
+    k = 0
+    k2 = 0
+    combined_labels = input_label_list + output_label_list
     for names, values in y_df.items():
         for names2, values2 in X_df.items():
             if j == 0:
-                axes[i][j].set_ylabel(names, fontsize=30)
-            if i == 6:
-                if names2 == 'rpm':
-                    axes[i][j].set_xlabel('ECMOrpm', fontsize= 30)
-                else:
-                    axes[i][j].set_xlabel(names2, fontsize=30)
-
+                axes[i][j].set_ylabel(combined_labels[k], fontsize=30)
+                k += 1
+            if i == y_df.shape[1] - 1:
+                axes[i][j].set_xlabel(input_label_list[k2], fontsize=30)
+                k2 += 1
             axes[i][j].scatter(X_df[names2].values, y_df[names].values, marker='.')
+            axes[i][j].ticklabel_format(axis='y', style='sci', scilimits= (0,0))
             j += 1
         i += 1
         j = 0
 
     fig.tight_layout()
-    save_plot(plt, output_path + title)
+    save_plot(plt=plt, file_path=output_path + title, dpi=600)

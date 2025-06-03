@@ -48,7 +48,7 @@ def sensitivity_analysis(X_df, y_df, models, input_bounds, sample_size):
 
     return sobol_indices_dict, input_bounds.keys(), X_dict, Y_dict
 
-def sensitivity_analysis_bounds(X_df, y_df, models, sa_input_bounds, sample_size, input_metric, sa_input_initial_dict, model):
+def sensitivity_analysis_bounds(X_df, y_df, models, sa_input_bounds, sample_size, input_metric, sa_input_initial_dict, model): #TODO: uncertainty metric parameter names and bounds? Oder von user spezifiert
     """Performs sensitivity analysis with varying the bounds.
     
     Args:
@@ -112,7 +112,7 @@ def sensitivity_analysis_bounds(X_df, y_df, models, sa_input_bounds, sample_size
             sa_input_bound_dict[uncertainty][param_name]['max'] = max(min_value, max_value)
             
         sa_input_bounds = sa_input_bound_dict[uncertainty]
-        sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, sa_input_bounds, sample_size=sample_size)
+        sa_results, _, _ , Y_dict = sensitivity_analysis(X_df, y_df, models, sa_input_bounds, sample_size=sample_size)
         if input_metric=='percentages' or input_metric=='maximum': uncertainty=uncertainty*100
         uncertainty_Y_dict[uncertainty] = Y_dict
         uncertainty_sobol_dict[uncertainty] = sa_results
