@@ -145,17 +145,17 @@ def preprocessing(da=False, **kwargs):
     else: data_df_all = read_ansys_output_to_dfs(data_path, da=da) # Ansys Output Files
     
     # Saving data
-    if kwargs['save_data'].lower() != 'none':
+    if kwargs['save_data']:
         # Check directory and creating directory if necessary
         directory = os.path.dirname(output_path)
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        data_df_all.to_csv(output_path + "/" + kwargs['save_data'], index=False)
+        data_df_all.to_csv( output_path + "/saved_data", index=False)
     
     df = data_df_all.copy()
     
-    #set the upper and lower bound based on the parameter data.
+    # Set the upper and lower bound based on the parameter data.
     lower_bound = kwargs.get('lower_bound', None)
     upper_bound = kwargs.get('upper_bound', None)
 
@@ -163,22 +163,19 @@ def preprocessing(da=False, **kwargs):
         # Filter for transient data based on time steps.
         column_name = "Time Step"
         df = df[(df[column_name] >= lower_bound) & (df[column_name] <= upper_bound)]
-        df.to_csv(kwargs['output_name'] + "/test_after_prep.csv", index=False)
         
-    if kwargs['normalize']:
-        df = normalize_data(df)
+        if kwargs['normalize']:
+            df = normalize_data(df)
+            
+        if kwargs['scaler'] != 'none':
+            df = scale_data(df, kwargs['scaler'])
         
-    if kwargs['scaler'] != 'none':
-        df = scale_data(df, kwargs['scaler'])
+        df = mean_of_timesteps(df, kwargs['input_parameter'])
     
-    if kwargs['get_mean']:
-        data_df = mean_of_timesteps(df, kwargs['input_parameter'])
-    else:
-        data_df = df
-    
-    #data_df.to_csv(kwargs['output_name'] + "/reduced_data.csv")
-    
-    X_df = data_df[kwargs['input_parameter']]
-    y_df = data_df[kwargs['output_parameter']]
+    df.to_csv('output_data/' + kwargs['output_name'] + "/reduced_data.csv")
+        
+
+    X_df = df[kwargs['input_parameter']]
+    y_df = df[kwargs['output_parameter']]
 
     return X_df, y_df

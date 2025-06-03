@@ -292,6 +292,7 @@ def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, i
 
         if output_unit_list is not None:
             axes[i].set_xlabel(output_unit_list[k], labelpad=12)
+            axes[i].set_title(output_label_list[k], pad=12)
             k += 1
         else:
             axes[i].set_xlabel(col)
