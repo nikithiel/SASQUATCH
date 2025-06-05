@@ -151,7 +151,7 @@ def preprocessing(da=False, **kwargs):
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        data_df_all.to_csv( output_path + "/saved_data", index=False)
+        data_df_all.to_csv( output_path + "/saved_data.csv", index=False)
     
     df = data_df_all.copy()
     
@@ -172,8 +172,7 @@ def preprocessing(da=False, **kwargs):
         
         df = mean_of_timesteps(df, kwargs['input_parameter'])
     
-    df.to_csv('output_data/' + kwargs['output_name'] + "/reduced_data.csv")
-        
+    df.to_csv(output_path + "/reduced_data.csv")
 
     X_df = df[kwargs['input_parameter']]
     y_df = df[kwargs['output_parameter']]

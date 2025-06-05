@@ -101,6 +101,18 @@ with open('configMVUQ.txt','r') as file:
                 for value in values:
                     output_label_list.append(value)
 
+        # Read input units
+        if splitted_line[0] == 'input_units':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                input_unit_list = []
+                for value in values:
+                    input_unit_list.append(value)
+
         # Read input labels
         if splitted_line[0] == 'input_parameter_label':
             #splitted_line = line.split()
@@ -448,6 +460,8 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_
         axs[i].plot(y_df.iloc[:, i], y_df.iloc[:, i],
                     label='Actual', c='black', linewidth=1.0)
 
+        axs[i].ticklabel_format(axis='both', style='sci', scilimits=(0,0))
+
         # Label axes: bottom row gets the x-label; left column gets the y-label
         row, col = divmod(i, 2)
 
@@ -467,8 +481,10 @@ def surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, output_
         if col == 0:
             axs[i].set_ylabel('Predicted Values')
 
+        combined_labels = input_label_list + output_label_list
+        combined_units = input_unit_list + output_unit_list
         if is_title:
-            axs[i].set_title(f'{output_name} in {output_units[output_name]}')
+            axs[i].set_title(f'{combined_labels[i]} in {combined_units[i]}')
 
         axs[i].grid(False)
 
@@ -877,19 +893,24 @@ def actual_scatter_plot(X_df, y_df, output_path, is_title=True, title="Pairplot 
 
     plot_size = max(X_df.shape[1], y_df.shape[1])
     plt.rcParams['mathtext.fontset'] = 'stix'
-    plt.rcParams['font.family'] = 'STIXGeneral'
-    plt.rcParams['font.size'] = 10
+    plt.rcParams['font.family'] = 'ST'
+    plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
     fig, axes = plt.subplots(y_df.shape[1], X_df.shape[1], figsize=(50.,50.))
     i = 0
     j = 0
-
+    k = 0
+    k2 = 0
+    combined_labels = input_label_list + output_label_list
     for names, values in y_df.items():
         for names2, values2 in X_df.items():
             if j == 0:
-                axes[i][j].set_ylabel(names, fontsize=30)
+                axes[i][j].set_ylabel(combined_labels[k], fontsize=30)
+                k += 1
             if i == y_df.shape[1] - 1:
-                axes[i][j].set_xlabel(names2, fontsize=30)
+                axes[i][j].set_xlabel(input_label_list[k2], fontsize=30)
+                k2 += 1
             axes[i][j].scatter(X_df[names2].values, y_df[names].values, marker='.')
+            axes[i][j].ticklabel_format(axis='y', style='sci', scilimits= (0,0))
             j += 1
         i += 1
         j = 0
