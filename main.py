@@ -134,7 +134,7 @@ elif run_type == 'sa':
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #
-    X_df, y_df = get_bounded_data(**parameter)
+    X_df, y_df = get_bounded_data(**parameter) # Acquiring the filtered dataset from the reduced dataset.
     sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, input_bounds, parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
