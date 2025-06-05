@@ -134,7 +134,7 @@ elif run_type == 'sa':
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #
-    X_df,y_df = get_bounded_data(**parameter)
+    X_df, y_df = get_bounded_data(**parameter)
     sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, input_bounds, parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
@@ -156,7 +156,9 @@ elif run_type == 'sa':
         model_list.append(model)
     
     plot_17_segment = True if input (" Plot the 17 segment model as well? (y/n)") == 'y' else False
-    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, parameter['output_parameter_sa_plot'], output_plots, parameter['sa_sobol_indice'], plot_17_segment = plot_17_segment, sa_17_segment_model = parameter['sa_17_segment_model'])
+    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, parameter['output_parameter_sa_plot'], output_plots, parameter['sa_sobol_indice'])
+    if plot_17_segment:
+        plot_sa_results_17_segments(sa_results, input_parameter_list, output_plots, parameter['sa_17_segment_model'], parameter['sa_sobol_indice'])
     show_plots() if showplot else None
     print("  Plotting of sa results: Done")
 
