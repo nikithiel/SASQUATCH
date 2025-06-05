@@ -179,3 +179,63 @@ def preprocessing(da=False, **kwargs):
     y_df = df[kwargs['output_parameter']]
 
     return X_df, y_df
+
+def get_bounded_data(**kwargs):
+    """ Function that gets the bounded data based on given start point and perturbation.
+    
+    Args:
+        kwargs: dict -> contains the following keys from the config file:
+            - input_start: str -> type of start point ('avg', 'median', 'start')
+            - input_start_perturbation: float -> perturbation percentage
+            - input_start_point: list -> custom start point values (optional)
+            - output_name: str -> name of the output folder
+            - input_parameter: list -> list of input parameters to filter by
+            - sa_output_parameter: list -> list of sensitivity analysis output parameters to filter by
+
+    Returns:
+        X_df, y_df: dataFrame, dataFrame -> filtered input and output data based on bounds
+    """
+    # Read all the parameters for the bounded data
+    startType = kwargs.get('input_start', 'avg')
+    perturbation = kwargs.get('input_start_perturbation', 50)
+    start = kwargs.get('input_start_point', None)
+    
+    # Reads the reduced data acquired from preprocessing and gets the bounds
+    output_path = './output_data/' + kwargs['output_name'] + '/'
+    dfpath = output_path + "/reduced_data.csv"
+    df = pd.read_csv(dfpath)
+    minmax = df.agg(['min', 'max'])
+    
+    if startType == 'avg':
+        # Calculates the average and set bounds based on perturbation
+        tempdf = df.copy()
+        tempdf.loc['average'] = df.mean(axis=0)
+        tempdf.loc['upper'] = (minmax.iloc[1]-tempdf.loc['average']).mul(1 + (perturbation / 100)) + tempdf.loc['average']
+        tempdf.loc['lower'] =  tempdf.loc['average'] - (tempdf.loc['average']-minmax.iloc[0]).mul(1 - (perturbation / 100))
+    
+    if startType == 'median':
+        # Calculates the median and set bounds based on perturbation
+        tempdf = df.copy()
+        tempdf.loc['median'] = df.median(axis=0)
+        tempdf.loc['upper'] = (minmax.iloc[1] - tempdf.loc['median']).mul(1 + (perturbation / 100)) + tempdf.loc['median']
+        tempdf.loc['lower'] = tempdf.loc['median'] - (tempdf.loc['median']-minmax.iloc[0]).mul(1 - (perturbation / 100))
+        
+    if startType == 'start':
+        # Uses a custom start point and sets bounds based on perturbation
+        if start is None:
+            print("   No start point(s) provided. Please provide a valid start point(s).")
+            exit(0)
+        tempdf = df.copy()
+        tempdf.loc['start'] = start
+        tempdf.loc['upper'] = (minmax.iloc[1] - tempdf.loc['start']).mul(1 + (perturbation / 100)) + tempdf.loc['start']
+        tempdf.loc['lower'] = tempdf.loc['start'] - (tempdf.loc['start']-minmax.iloc[0]).mul(1 - (perturbation / 100))
+
+    finaldf = df.copy()
+    for output in kwargs['input_parameter']:
+        # Filter the dataset for every output parameter bounds
+        finaldf = df[df[output].between(tempdf[output]['lower'], tempdf[output]['upper'])]
+        if finaldf.empty:
+            print(f"   No matching data found for the selected start point. Consider reselecting the start point or increase perturbation value.")
+            exit(0)
+    
+    return finaldf[kwargs['input_parameter']], finaldf[kwargs['sa_output_parameter']]

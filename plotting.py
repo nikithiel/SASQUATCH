@@ -216,7 +216,7 @@ def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=
     plt.tight_layout()
     save_plot(plt, output_path + title)
 
-def plot_densities(X_dict, Y_dict, output_path, lables=None, is_title=True, title="Densities plot"):
+def plot_densities(X_dict, Y_dict, output_path, labels=None, is_title=True, title="Densities plot"):
     """Plots and saves the distribution of each feature of the DataFrame.
     Args:
         - X_dict: dict -> Dictionary containing arrays for each model's test results
@@ -246,7 +246,7 @@ def plot_densities(X_dict, Y_dict, output_path, lables=None, is_title=True, titl
             except:
                 pass
 
-        axes[i].set_xlabel(output_dict[lables[i]]+" in "+units_out_all[i])
+        axes[i].set_xlabel(output_label_list[i] +" in "+ output_unit_list[i])
 
     # Hide unused subplots   
     for j in range(num_plots, len(axes)):

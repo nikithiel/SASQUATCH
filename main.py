@@ -17,7 +17,7 @@ Mail: joel.gestrich@rwth-aachen.de, niklas.thiel@rwth-aachen.de
 import warnings
 import pandas as pd
 from initialization import read_user_defined_parameters, get_data_bounds
-from preprocessing import preprocessing
+from preprocessing import preprocessing, get_bounded_data
 from models import creatingModels
 from surrogate_model_comparison import kFold_Evaluation, train_and_save_models
 from plotting import plot_smc_timings, plot_smc_r2score_and_errors, plot_data, plot_densities
@@ -134,6 +134,7 @@ elif run_type == 'sa':
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #
+    X_df,y_df = get_bounded_data(**parameter)
     sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, input_bounds, parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
@@ -147,7 +148,7 @@ elif run_type == 'sa':
 
     # ----- Plotting Results ----- #
     Y_dict['Training Data'] = y_df.values
-    plot_densities(X_dict, Y_dict, output_plots, lables=parameter['sa_output_parameter'], is_title=False, title="Density plot")
+    plot_densities(X_dict, Y_dict, output_plots, labels=parameter['sa_output_parameter'], is_title=False, title="Density plot")
     values_list = []
     model_list = []
     for (model, values) in Y_dict.items():
