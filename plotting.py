@@ -125,24 +125,31 @@ with open('configMVUQ.txt','r') as file:
                 for value in values:
                     input_label_list.append(value)
 
-# Custom class for matplotlib scientific notation formatter. Acquired from stackoverflow.
-# Will be deleted if it ends up not being used.
-class OOMFormatter(matplotlib.ticker.ScalarFormatter):
-    def __init__(self, order=0, fformat="%1.2d", offset=True, mathText=True):
-        self.oom = order
-        self.fformat = fformat
-        matplotlib.ticker.ScalarFormatter.__init__(self,useOffset=offset,useMathText=mathText)
-    def _set_order_of_magnitude(self):
-        self.orderOfMagnitude = self.oom
-    def _set_format(self, vmin=None, vmax=None):
-        self.format = self.fformat
-        if self._useMathText:
-            self.format = r'$\mathdefault{%s}$' % self.format
-
 class ScalarFormatterForceFormat(ScalarFormatter):
     def _set_format(self, vmin=None, vmax=None):
 
         self.format = "%1.1f"  # Force one decimal place in the tick labels.
+
+# The mixed function for every runtype
+def plot_data_analysis(X_df, y_df, output_path, **kwargs):
+    plot_correlation(X_df, y_df, output_path)
+    plot_feature_distribution(y_df, output_path, dict(zip(kwargs['output_parameter'],kwargs['output_units'])), num_bins = 20, title="Distribution of Output Parameter")
+    actual_scatter_plot(X_df, y_df, output_path)
+
+    # Optional plots
+    plot_boxplots(X_df, y_df, output_path, title="Boxplots of Ouput Parameter") if input(" Would you like to plot the boxplot as well?: (y/n)") == 'y' else None
+    plot_data(X_df, y_df, output_path) if input(" Would you like to plot the detailed scatterplot as well?: (y/n)") == 'y' else None
+
+def plot_surrogate_model_comparison(smc_results, X_df, y_df, output_path, models, kwargs):
+    plot_smc_r2score_and_errors(smc_results, kwargs['output_parameter'], output_path, metrics=kwargs['metrics'], average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
+    plot_smc_r2score_and_errors(smc_results, kwargs['output_parameter'], output_path, metrics=kwargs['metrics'], average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True) if input(" Would you like to plot detailed r2 score?: (y/n) ") == 'y' else None
+    surrogate_model_predicted_vs_actual(models, X_df, y_df, output_path, kwargs['output_parameter'], dict(zip(kwargs['output_parameter'], kwargs['output_units']))) if input(" Would you like to plot the model comparison as a scatter plot?: (y/n) ") == 'y' else None
+    plot_smc_timings(smc_results, output_path, is_title=False) if input(" Would you like to plot the surrogate model comparison timing plot?: (y/n) ") == 'y' else None
+
+def plot_sensitivity_analysis(X_dict, y_dict, output_path, sa_results, model_names, input_parameter_list, parameter):
+    plot_densities(X_dict, y_dict, output_path)
+    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, parameter['output_parameter_sa_plot'], output_path, parameter['sa_sobol_indice'])
+    plot_sa_results_17_segments(sa_results, input_parameter_list, output_path, parameter['sa_17_segment_model'], parameter['sa_sobol_indice']) if input (" Plot the 17 segment model as well? (y/n)") == 'y' else None
 
 def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=None, metrics=['r2_score', 'RMSE', 'MAPE'], \
                                 is_title=True, title="Surrogate Model Comparison Plots", average_output=False, rmse_log_scale=False, figure_size = (6.5,4)):
@@ -173,7 +180,7 @@ def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=
     mean_scores['Value'] = mean_scores['Value'].apply(lambda x: 0 if x < 0 else x)
 
     # Create subplots
-    fig, axes = plt.subplots(1, len(metrics), figsize=figure_size)
+    fig, axes = plt.subplots(1, len(metrics), figsize=(5.,5.))
 
     # Bar plot for mean R2 scores
     for i, metric in enumerate(metrics):
@@ -218,17 +225,17 @@ def plot_smc_r2score_and_errors(df, output_parameter, output_path, output_units=
     if not average_output:
         if len(metrics) == 1:
             handles, labels = axes.get_legend_handles_labels()
-            plt.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left')
+            fig.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left')
         else:
             handles, labels = axes[0].get_legend_handles_labels()
             if thesis:
                 for i, label in enumerate(labels):
                     labels[i] = output_dict[label]
-            plt.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left', fontsize='small')
-    plt.tight_layout()
+            fig.legend(handles, labels, bbox_to_anchor=(1, 0.5), loc='center left', fontsize='small')
+    #plt.tight_layout()
     save_plot(plt, output_path + title)
 
-def plot_densities(X_dict, Y_dict, output_path, lables=None, is_title=True, title="Densities plot"):
+def plot_densities(X_dict, Y_dict, output_path, labels=None, is_title=True, title="Densities plot"):
     """Plots and saves the distribution of each feature of the DataFrame.
     Args:
         - X_dict: dict -> Dictionary containing arrays for each model's test results
@@ -258,7 +265,7 @@ def plot_densities(X_dict, Y_dict, output_path, lables=None, is_title=True, titl
             except:
                 pass
 
-        axes[i].set_xlabel(output_dict[lables[i]]+" in "+units_out_all[i])
+        axes[i].set_xlabel(output_label_list[i] +" in "+ output_unit_list[i])
 
     # Hide unused subplots   
     for j in range(num_plots, len(axes)):
@@ -392,7 +399,7 @@ def plot_smc_timings(df, output_path, is_title=True, title="Boxplot of Timings o
         - title: str -> title of plot / name of saved figure
     """
     # Plotting the bar plot
-    plt.figure(figsize=get_figsize())
+    #plt.figure(figsize=get_figsize())
     grouped_data = [df[df['Model'] == model]['Timing'] for model in df['Model'].unique()]
     plt.boxplot(grouped_data, labels=df['Model'].unique())
     #sns.boxplot(x='Model', y='Timing', data=df)
@@ -683,7 +690,7 @@ def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation 
     correlation_matrix = df_combined.corr()
 
     # Create a heatmap of the correlation matrix
-    plt.figure(figsize=(10.,10.))
+    #plt.figure(figsize=(10.,10.))
     sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f", xticklabels = input_label_list + output_label_list, yticklabels = input_label_list + output_label_list)
     plt.title(title if is_title else None)
     plt.xticks(rotation=45)
