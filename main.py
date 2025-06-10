@@ -53,7 +53,11 @@ run_type = parameter['run_type']
 if run_type == 'da':
     print("Analyzing Data\n------------")
     X_df, y_df = preprocessing(da=True, **parameter)
-    output_path = './output_data/' + parameter['output_name'] + '/' +'data_analysis' + '/'
+    
+    try: # Path where the file is saved
+        output_path = './output_data/' + parameter['output_name'] + '/' +'data_analysis' + '/'
+    except Exception:
+        print("!!! Error: Parameter in config.txt file missing !!!")
 
     # Plotting default plots
     print("Plotting Data\n------------")
@@ -73,9 +77,12 @@ elif run_type == 'su' or run_type == 'sc':
     models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done")
 
-    #determine the path for the specific file and the folder to save the file
-    output_data = './output_data/' + parameter['output_name'] + '/' + 'surrogate_model' + '/'
-    output_path = output_data + 'plots/'
+    # Determine the path for the specific file and the folder to save the file
+    try: # Path where the plots are saved
+        output_data = './output_data/' + parameter['output_name'] + '/' + 'surrogate_model' + '/'
+        output_path = output_data + 'plots/'
+    except Exception:
+        print("!!! Error: Parameter in config.txt file missing !!!")
 
     # ----- Training and Testing of Surrogate Models ----- #
     smc_results = kFold_Evaluation(X=X_df, y=y_df, models=models, parameter = parameter)
@@ -109,8 +116,7 @@ elif run_type == 'sa':
     print("Sensitivity Analysis")
 
     # ----- Initialize path to save the results ----- #
-    try:
-        # Creating the path to save the file
+    try: # Path where the plot and output is saved
         output_file = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/ST_results/'
         output_path = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/plots/'
 
@@ -171,24 +177,15 @@ elif run_type == 'uq':
     print("Uncertainty Quantification")
     # ----- Initialize Hyperparameter ----- #
     try:
-        
-        input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
-        output_parameter = parameter['sa_output_parameter']
-        output_parameter_label = parameter.get('output_parameter_label', parameter['sa_output_parameter'])
-
+        # Path where the file is saved
         output_data = './output_data/' + parameter['output_name'] + '/' + 'uncertainty_quantification/'
-        output_plots = output_data
-
-        output_parameter_sa_plot = parameter['output_parameter_sa_plot']
-        sa_17_segment_model = parameter['sa_17_segment_model']
-        sample_size = parameter['sa_sample_size']
-            
+        output_plots = output_data           
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
     
     # ----- DATA Preprocessing ----- #
-    X_df, y_df = preprocessing(da=True, **parameter)
-    sa_input_initial_dict = {'y': -5, 'z': 51, 'alpha': 0, 'R': 3.6} #'alpha': 0,
+    X_df, y_df = preprocessing(da=False, **parameter)
+    sa_input_initial_dict = {'y': -5, 'z': 51, 'alpha': 0, 'R': 3.6} # Starting point
     metric = 'maximum' # millimeter, percentages, maximum 
     if metric == 'percentages':  
         sa_input_initial_dict.pop('alpha')
@@ -199,10 +196,13 @@ elif run_type == 'uq':
     input_bounds = get_data_bounds(X_df)
     models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
+
+    # ----- Getting bounded data ----- #
+    X_df, y_df = get_bounded_data(**parameter) # Acquiring the filtered dataset from the reduced dataset
     
     # ----- Sensitivity Analysis ----- #  
-    the_model = sa_17_segment_model.replace('_',' ')      
-    uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_bounds(X_df=X_df, y_df=y_df, models=models, sa_input_bounds=input_bounds, sample_size=sample_size, input_metric=metric, sa_input_initial_dict=sa_input_initial_dict, model=the_model)
+    the_model = parameter['sa_17_segment_model'].replace('_',' ')      
+    uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_bounds(X_df=X_df, y_df=y_df, models=models, sa_input_bounds=input_bounds, sample_size=parameter['sa_sample_size'], input_metric=metric, sa_input_initial_dict=sa_input_initial_dict, model=the_model)
     print("  Perform SA: Done")
 
     # ----- Plotting Results ----- #
@@ -219,7 +219,7 @@ elif run_type == 'uq':
         y_annot="Output Variation in %"
         title="Input Variation perc of input param range"
 
-    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
+    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=True)
 
     to_plot = 'some_segments'
     to_plot_dict = {}
@@ -248,7 +248,7 @@ elif run_type == 'uq':
     to_plot_dict['Ekin']['numbers'] = [2]
     to_plot_dict['Ekin']['names'] = ['Ekin']
 
-    bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(parameter['output_parameter'], output_parameter_label)), model_name = the_model, sobol_index='ST', 
+    bounds_sobol(uncertainty_sobol_dict, output_plots, parameter['input_parameter_label'], dict(zip(parameter['output_parameter'], parameter['output_parameter_label'])), model_name = the_model, sobol_index='ST', 
                  fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=False, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
     
     bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \
@@ -262,86 +262,7 @@ elif run_type == 'uq':
     
     print("  Plotting of uq results: Done")
 
-    print("Sensitivity Analysis Bounds: Done")
-
-elif run_type == 'ps':
-    print("Project Specific")
-    try:
-
-        input_parameter_names = parameter['input_parameter']
-        input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
-        input_parameter_units = parameter['input_units']
-
-        output_parameter_names = parameter['output_parameter']
-        output_parameter_label = parameter.get('output_parameter_label', parameter['output_parameter'])
-        output_parameter_units = parameter['output_units']
-
-        output_parameter_sa_plot_names = parameter['output_parameter_sa_plot']
-        output_parameter_sa_plot_label = parameter.get('output_parameter_sa_plot_label', parameter['output_parameter_sa_plot'])
-        output_parameter_sa_plot_units = parameter['output_units_sa_plot']
-
-        output_data = './output_data/' + parameter['output_name'] + '/'
-        output_plots = output_data + 'Plots/'
-        model_names = parameter['models']
-        
-        lower_bound = parameter.get('lower_bound', None)
-        upper_bound = parameter.get('upper_bound', None)
-
-        
-        input_parameter = {
-            param_name: {
-                "label": param_label,
-                "unit": param_unit.replace('*', ' ')
-            }
-            for param_name, param_label, param_unit in zip(
-                input_parameter_names,
-                input_parameter_label,
-                input_parameter_units
-            )
-        }
-        #input_parameter = dict(zip(input_parameter_names, [val.replace('*', ' ') for val in input_parameter_units]))
-
-        output_parameter = {
-            param_name: {
-                "label": param_label,
-                "unit": param_unit.replace('*', ' ')
-            }
-            for param_name, param_label, param_unit in zip(
-                output_parameter_names,
-                output_parameter_label,
-                output_parameter_units
-            )
-        }
-
-        output_parameter_sa_plot = {
-            param_name: {
-                "label": param_label,
-                "unit": param_unit.replace('*', ' ')
-            }
-            for param_name, param_label, param_unit in zip(
-                output_parameter_sa_plot_names,
-                output_parameter_sa_plot_label,
-                output_parameter_sa_plot_units
-            )
-        }
-        #output_parameter_sa_plot = dict(zip(output_parameter_sa_plot_names, [val.replace('*', ' ') for val in output_parameter_sa_plot_units]))
-
-    except Exception:
-        print("!!! Error: Parameter in config.txt file missing !!!")
-    
-    X_df, y_df = preprocessing(da=True, **parameter)
-        
-    input_bounds = get_data_bounds(X_df)
-    models, model_names = creatingModels(input_bounds, parameter)
-    print("  Creating Models: Done : ", model_names)
-    print(y_df.columns)
-    #plot_feature_distribution(y_df[output_parameter_sa_plot], output_plots, num_bins=10, is_title=False, title="Output_Distribution", num_subplots_in_row=4, figure_size='small')
-    #show_plots()
-    #surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, output_parameter, dict(zip(output_parameter, output_units)), is_title=False, title="Actual_vs_Predicted")
-    #show_plots()
-    plot_feature_scatterplot(pd.concat([X_df, y_df], axis=1), input_parameter, output_parameter_sa_plot, 
-                             output_plots, fig_size=(17.5/2.54, 17.5/2.54), is_title=False, title="Scatterplot Input Output")
-    show_plots() if showplot else None
+    print("Uncertainty Quantification: Done")
 
 else:
     print('Unknown Input: ', run_type)
