@@ -53,10 +53,12 @@ output_dict = {
     'wss-17': r'WSS$_{17}$'
 }
 
-plt.rcParams['mathtext.fontset'] = 'stix'
-plt.rcParams['font.family'] = 'STIXGeneral' 
-plt.rcParams['font.size'] = 10
-plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
+plt_style = { # Use to change the formatting and text of the plots
+    'mathtext.fontset' : 'stix', 
+    'font.family' : 'STIXGeneral', 
+    'font.size' : 10
+    }
+plt.rcParams.update(**plt_style)
 
 # Read specifically the types to be plotted from the input file
 with open('configMVUQ.txt','r') as file:
@@ -399,7 +401,7 @@ def plot_smc_timings(df, output_path, is_title=True, title="Boxplot of Timings o
         - title: str -> title of plot / name of saved figure
     """
     # Plotting the bar plot
-    #plt.figure(figsize=get_figsize())
+    plt.figure(figsize=get_figsize())
     grouped_data = [df[df['Model'] == model]['Timing'] for model in df['Model'].unique()]
     plt.boxplot(grouped_data, labels=df['Model'].unique())
     #sns.boxplot(x='Model', y='Timing', data=df)
@@ -690,7 +692,7 @@ def plot_correlation(X_df, y_df, output_path, is_title=True, title="Correlation 
     correlation_matrix = df_combined.corr()
 
     # Create a heatmap of the correlation matrix
-    #plt.figure(figsize=(10.,10.))
+    plt.figure(figsize=(10.,10.))
     sns.heatmap(correlation_matrix, cmap='viridis', fmt=".2f", xticklabels = input_label_list + output_label_list, yticklabels = input_label_list + output_label_list)
     plt.title(title if is_title else None)
     plt.xticks(rotation=45)

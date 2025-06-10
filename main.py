@@ -99,7 +99,7 @@ elif run_type == 'su' or run_type == 'sc':
         # Plotting default plot
         print("  Plotting surrogate model comparison result")
         plot_surrogate_model_comparison(smc_results=smc_results, X_df=X_df, y_df=y_df, output_path=output_path, models=models, kwargs=parameter)
-        plt.show() if showplot else None
+        show_plots() if showplot else None
         
         print("  Plotting of smc results: Done")
         print("Surrogate Model Comparison: Done")
@@ -156,7 +156,7 @@ elif run_type == 'sa':
     # ----- Plotting Results ----- #
     Y_dict['Training Data'] = y_df.values
     plot_sensitivity_analysis(X_dict, Y_dict, output_path, sa_results, model_names, input_parameter_list, parameter)
-    show_plots() if showplot else None
+    plt.show() if showplot else None
     print("  Plotting of sa results: Done")
 
     print("Sensitivity Analysis: Done")
