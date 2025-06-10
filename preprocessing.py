@@ -1,4 +1,5 @@
 import os
+import collections.abc
 import pandas as pd
 from sklearn.preprocessing import normalize, MinMaxScaler, StandardScaler
 from plotting import plot_boxplots
@@ -178,3 +179,88 @@ def preprocessing(da=False, **kwargs):
     y_df = df[kwargs['output_parameter']]
 
     return X_df, y_df
+
+def get_bounded_data(**kwargs):
+    """ Function that gets the bounded data based on given start point and perturbation.
+    
+    Args:
+        kwargs: dict -> contains the following keys from the config file:
+            - input_start: str -> type of start point ('avg', 'median', 'start')
+            - input_start_perturbation: float -> perturbation percentage
+            - input_start_point: list -> custom start point values (optional)
+            - output_name: str -> name of the output folder
+            - input_parameter: list -> list of input parameters to filter by
+            - sa_output_parameter: list -> list of sensitivity analysis output parameters to filter by
+
+    Returns:
+        X_df, y_df: dataFrame, dataFrame -> filtered input and output data based on bounds
+    """
+    # Read all the parameters for the bounded data
+    startType = kwargs.get('input_start', 'avg')
+    start = kwargs.get('input_start_point', None)
+    
+    # Reads the perturbation percentage for the bounds
+    perturbation = kwargs.get('input_start_perturbation', 50)
+    if not isinstance(perturbation, collections.abc.Sequence): # If only 1 pertrubation value is given, it will be used for all values
+        perturbation = [perturbation] * len(kwargs['input_parameter'])
+        perturbation = dict(zip(kwargs['input_parameter'], perturbation))
+    elif len(perturbation) == len(kwargs['input_parameter']): # If the number of perturbation is not the exact same, return an error
+        perturbation = dict(zip(kwargs['input_parameter'], perturbation))
+    else:
+        print(' Incorrect perturbation value given. Either input only 1 value or the exact number as input value')
+        exit(0)
+    
+    # Reads the reduced data acquired from preprocessing and gets the bounds
+    output_path = './output_data/' + kwargs['output_name'] + '/'
+    dfpath = output_path + "/reduced_data.csv"
+    df = pd.read_csv(dfpath)
+    minmax = df.agg(['min', 'max'])
+    
+    if startType not in ['avg', 'median', 'start']:
+        # Invalid start type will simply return the reduced data set
+        print(f"   Invalid start type: {startType}. The data will not be bounded.")
+        return df[kwargs['input_parameter']], df[kwargs['sa_output_parameter']]
+    
+    if startType == 'avg':
+        # Calculates the average and set bounds based on perturbation
+        print( "   Preparing filtered data using average starting point and perturbation values of: " , perturbation)
+        tempdf = df.copy()
+        tempdf.loc['average'] = df.mean(axis=0)
+        tempdf.loc['upper'] = df.mean(axis=0)
+        tempdf.loc['lower'] = df.mean(axis=0)
+        for a in kwargs['input_parameter']:
+            tempdf.loc['upper',a] = ((minmax.iloc[1][a]-tempdf.loc['average'][a]) * (1 + (perturbation[a] / 100)) ) + tempdf.loc['average'][a]
+            tempdf.loc['lower',a] =  tempdf.loc['average'][a] - ((tempdf.loc['average'][a]-minmax.iloc[0][a]) * (1 - (perturbation[a] / 100)))
+    
+    if startType == 'median':
+        # Calculates the median and set bounds based on perturbation
+        print( f"   Preparing filtered data using median starting point and perturbation values of: " , perturbation)
+        tempdf = df.copy()
+        tempdf.loc['median'] = df.median(axis=0)
+        for a in kwargs['input_parameter']:
+            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['median'][a])*(1 + (perturbation[a] / 100)) + tempdf.loc['median'][a]
+            tempdf.loc['lower',a] = tempdf.loc['median'][a] - (tempdf.loc['median'][a]-minmax.iloc[0][a])*(1 - (perturbation[a] / 100))
+        
+    if startType == 'start':
+        # Uses a custom start point and sets bounds based on perturbation
+        if start is None:
+            print("   No start point(s) provided. Please provide a valid start point(s).")
+            exit(0)
+        print( f"   Preparing filtered data using custom starting point of" , start , " , and perturbation values of: " , perturbation)
+        tempdf = df.copy()
+        tempdf.loc['start'] = start
+        for a in kwargs['input_parameter']:
+            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*(1 + (perturbation[a] / 100)) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*(1 - (perturbation[a] / 100))
+
+    finaldf = df.copy() # The dataframe to be returned
+    for a in kwargs['input_parameter']:
+        # Filter the dataset for every output parameter bounds
+        finaldf = df[df[a].between(tempdf[a]['lower'], tempdf[a]['upper'])]
+        if finaldf.empty:
+            print(f"   No matching data found for the selected start point. Consider reselecting the start point or increase perturbation value.")
+            exit(0)
+    
+    print(   f" Data filtering complete with remaining data containing" , finaldf.shape[0] , "points from" , df.shape[0] , "data points")
+    finaldf.to_csv(output_path + '/reduced_filtered_data.csv') # Saves the filtered reduced data for potential future use
+    return finaldf[kwargs['input_parameter']], finaldf[kwargs['sa_output_parameter']]
