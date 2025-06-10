@@ -33,6 +33,7 @@ import os
 import pickle
 import time
 import json
+from copy import deepcopy
 
 # ----- Program Information ----- #
 print("\n===============================================")
@@ -110,7 +111,7 @@ elif run_type == 'sa':
     # ----- Initialize path to save the results ----- #
     try:
         # Creating the path to save the file
-        output_file = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/results/'
+        output_file = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/ST_results/'
         output_path = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/plots/'
 
     except Exception:
@@ -128,6 +129,7 @@ elif run_type == 'sa':
     # ----- Sensitivity Analysis ----- #
     X_df, y_df = get_bounded_data(**parameter) # Acquiring the filtered dataset from the reduced dataset.
     sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, input_bounds, parameter['sa_sample_size'])
+    sa_results_for_plot = deepcopy(sa_results)
     print("  Perform SA: Done")
 
     # ----- Saving SA Results ----- #
@@ -135,14 +137,17 @@ elif run_type == 'sa':
         # Create the path if it doesn't exist yet
         os.makedirs(os.path.dirname(output_file), exist_ok = True)
 
-        # Save all the individual SA arrays as csv file for future imports
+        # Save only the ST sensitivity matrix
         for key in sa_results.keys():
             for key2 in sa_results[key].keys():
-                for key3 in sa_results[key][key2].keys():
-                    os.makedirs(os.path.join(output_file,key,key2), exist_ok = True)
-                    filenamecsv = output_file + "/" + key + "/" + key2 + "/sa_array_" + key3 + ".csv"
-                    pd.DataFrame(sa_results[key][key2][key3]).to_csv(filenamecsv)
-                    sa_results[key][key2][key3] = sa_results[key][key2][key3].tolist() #  Convert the results to a list for dumping the json file         
+                sa_results[key][key2] = sa_results[key][key2]['ST']
+
+        # Save the file as csv
+        for key in sa_results.keys():
+            filenamecsv = output_file + "/sa_array_" + key + ".csv"
+            pd.DataFrame(sa_results[key]).to_csv(filenamecsv)
+            for key2 in sa_results[key].keys():
+                sa_results[key][key2] = sa_results[key][key2].tolist() #  Convert the results to a list for dumping the json file      
 
         # Saving the results in a json file
         for key in sa_results.keys():
@@ -155,7 +160,7 @@ elif run_type == 'sa':
 
     # ----- Plotting Results ----- #
     Y_dict['Training Data'] = y_df.values
-    plot_sensitivity_analysis(X_dict, Y_dict, output_path, sa_results, model_names, input_parameter_list, parameter)
+    plot_sensitivity_analysis(X_dict, Y_dict, output_path, sa_results_for_plot, model_names, input_parameter_list, parameter)
     plt.show() if showplot else None
     print("  Plotting of sa results: Done")
 

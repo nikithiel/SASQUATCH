@@ -1,5 +1,5 @@
 # [da] Data Analysis - [su] Surrogate Model Comparison - [sa] Sensitivity Analysis - [uq] Uncertainty Quantification - [ps] Project Specific
-run_type da
+run_type sa
 
 # Data
 data_path Data_example.csv
