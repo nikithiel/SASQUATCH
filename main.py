@@ -32,6 +32,7 @@ from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_boun
 import os
 import pickle
 import time
+import json
 
 # ----- Program Information ----- #
 print("\n===============================================")
@@ -73,7 +74,7 @@ elif run_type == 'su' or run_type == 'sc':
 
     #determine the path for the specific file and the folder to save the file
     output_data = './output_data/' + parameter['output_name'] + '/' + 'surrogate_model' + '/'
-    output_path = output_data + 'Plots/'
+    output_path = output_data + 'plots/'
 
     # ----- Training and Testing of Surrogate Models ----- #
     smc_results = kFold_Evaluation(X=X_df, y=y_df, models=models, parameter = parameter)
@@ -109,8 +110,8 @@ elif run_type == 'sa':
     # ----- Initialize path to save the results ----- #
     try:
         # Creating the path to save the file
-        output_data = './output_data/' + parameter['output_name'] + '/' + 'sensitivity_analysis' + '/'
-        output_path = output_data
+        output_file = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/results/'
+        output_path = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/plots/'
 
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
@@ -131,8 +132,23 @@ elif run_type == 'sa':
 
     # ----- Saving SA Results ----- #
     if input('   Do you want to save the sensitivity analysis results(y/n):' ) == 'y':
-        with open("sa_results.txt", 'a') as sa_out_file:
-            sa_out_file.write(str(sa_results))
+        # Create the path if it doesn't exist yet
+        os.makedirs(os.path.dirname(output_file), exist_ok = True)
+
+        # Save all the individual SA arrays as csv file for future imports
+        for key in sa_results.keys():
+            for key2 in sa_results[key].keys():
+                for key3 in sa_results[key][key2].keys():
+                    os.makedirs(os.path.join(output_file,key,key2), exist_ok = True)
+                    filenamecsv = output_file + "/" + key + "/" + key2 + "/sa_array_" + key3 + ".csv"
+                    pd.DataFrame(sa_results[key][key2][key3]).to_csv(filenamecsv)
+                    sa_results[key][key2][key3] = sa_results[key][key2][key3].tolist() #  Convert the results to a list for dumping the json file         
+
+        # Saving the results in a json file
+        for key in sa_results.keys():
+            filename = output_file + "sa_results_" + key + ".json"
+            with open(filename, "w") as sa_file:
+                json.dump(sa_results[key], sa_file, separators=(',',':'), indent=4)
         print("  Saving sensitivity analysis results: Done")
     else:
         print("   Saving sensitivity analysis results: Skipped")

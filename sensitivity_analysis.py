@@ -26,7 +26,7 @@ def sensitivity_analysis(X_df, y_df, models, input_bounds, sample_size):
     for model_name, model in models.items():
         trained_model = MultiOutputRegressor(model).fit(X_df,y_df)
 
-        # from input_bounds get num_vars, names, bounds
+        # From input_bounds get num_vars, names, bounds
         num_vars = len(input_bounds)
         names = list(input_bounds.keys())
         bounds = [(input_bounds[key]['min'], input_bounds[key]['max']) for key in input_bounds]
