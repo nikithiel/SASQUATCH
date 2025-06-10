@@ -56,6 +56,4 @@ output_units_sa_plot Pa Pa*m$^3$ Pa*m$^3$ Pa
 output_parameter_sa_plot_label WSS Eloss Ekin TVPG
 
 # Uncertainty Quantification 
-input_start_uq average 
-input_start_point_uq 1 2 3 4 
-input_start_perturbation_uq 10 
+uq_metric maximum
