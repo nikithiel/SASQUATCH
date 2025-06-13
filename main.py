@@ -19,21 +19,18 @@ import pandas as pd
 from initialization import read_user_defined_parameters, get_data_bounds
 from preprocessing import preprocessing, get_bounded_data
 from models import creatingModels
-import matplotlib.pyplot as plt
 from surrogate_model_comparison import kFold_Evaluation, train_and_save_models
-from plotting import plot_densities
-from plotting import show_plots, plot_sa_results_heatmap
-from plotting import plot_sa_results_17_segments
-from plotting import plot_feature_scatterplot
+from plotting import plot_smc_timings, plot_smc_r2score_and_errors, plot_data, plot_densities
+from plotting import surrogate_model_predicted_vs_actual, show_plots, plot_sa_results_heatmap
+from plotting import plot_sa_results_17_segments, plot_boxplots, plot_correlation
+from plotting import plot_feature_distribution, plot_feature_scatterplot, actual_scatter_plot
 from plotting import bounds_variation_plot, bounds_mean_std, bounds_sobol
-from plotting import plot_data_analysis, plot_surrogate_model_comparison, plot_sensitivity_analysis
 from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_bounds
 
 import os
 import pickle
 import time
-import json
-from copy import deepcopy
+import collections.abc
 
 # ----- Program Information ----- #
 print("\n===============================================")
@@ -51,18 +48,21 @@ showplot = parameter['plot_data']
 run_type = parameter['run_type']
 
 if run_type == 'da':
-    print("Analyzing Data\n------------")
+    print("Analyze Data\n------------")
     X_df, y_df = preprocessing(da=True, **parameter)
-    
-    try: # Path where the file is saved
-        output_path = './output_data/' + parameter['output_name'] + '/' +'data_analysis' + '/'
-    except Exception:
-        print("!!! Error: Parameter in config.txt file missing !!!")
+    output_plots = './output_data/' + parameter['output_name'] + '/' +'data_analysis' + '/'
 
     # Plotting default plots
     print("Plotting Data\n------------")
-    plot_data_analysis(X_df, y_df, output_path, **parameter)
-    plt.show() if showplot else None
+    plot_correlation(X_df, y_df, output_plots)
+    plot_feature_distribution(y_df, output_plots, dict(zip(parameter['output_parameter'], parameter['output_units'])), num_bins=20, title="Distribution of Output Parameter")
+    actual_scatter_plot(X_df, y_df, output_plots)
+    #show_plots() if input(" Display plots?: (y/n) ") == 'y' else None
+
+    # Optional plots
+    plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter") if input(" Would you like to plot the boxplot as well?: (y/n)") == 'y' else None
+    plot_data(X_df, y_df, output_plots) if input(" Would you like to plot the detailed scatterplot as well?: (y/n)") == 'y' else None
+    show_plots() if showplot else None
     print("Analyze Data: Done")
 
 elif run_type == 'su' or run_type == 'sc':
@@ -77,12 +77,9 @@ elif run_type == 'su' or run_type == 'sc':
     models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done")
 
-    # Determine the path for the specific file and the folder to save the file
-    try: # Path where the plots are saved
-        output_data = './output_data/' + parameter['output_name'] + '/' + 'surrogate_model' + '/'
-        output_path = output_data + 'plots/'
-    except Exception:
-        print("!!! Error: Parameter in config.txt file missing !!!")
+    #determine the path for the specific file and the folder to save the file
+    output_data = './output_data/' + parameter['output_name'] + '/' + 'surrogate_model' + '/'
+    output_plots = output_data + 'Plots/'
 
     # ----- Training and Testing of Surrogate Models ----- #
     smc_results = kFold_Evaluation(X=X_df, y=y_df, models=models, parameter = parameter)
@@ -105,20 +102,25 @@ elif run_type == 'su' or run_type == 'sc':
     if parameter['plot_data']:
         # ----- Plotting Results ----- #
         # Plotting default plot
-        print("  Plotting surrogate model comparison result")
-        plot_surrogate_model_comparison(smc_results=smc_results, X_df=X_df, y_df=y_df, output_path=output_path, models=models, kwargs=parameter)
+        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
+
+        # Optional plots
+        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True) if input(" Would you like to plot detailed r2 score?: (y/n) ") == 'y' else None
+        surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, parameter['output_parameter'], dict(zip(parameter['output_parameter'], parameter['output_units']))) if input(" Would you like to plot the model comparison as a scatter plot?: (y/n) ") == 'y' else None
+        plot_smc_timings(smc_results, output_plots, is_title=False) if input(" Would you like to plot the surrogate model comparison timing plot?: (y/n) ") == 'y' else None
         show_plots() if showplot else None
         
         print("  Plotting of smc results: Done")
         print("Surrogate Model Comparison: Done")
 
-elif run_type == 'sa':
+elif run_type == 'sa':  
     print("Sensitivity Analysis")
 
     # ----- Initialize path to save the results ----- #
-    try: # Path where the plot and output is saved
-        output_file = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/ST_results/'
-        output_path = './output_data/' + parameter['output_name'] + '/sensitivity_analysis/plots/'
+    try:
+        # Creating the path to save the file
+        output_data = './output_data/' + parameter['output_name'] + '/' + 'sensitivity_analysis' + '/'
+        output_plots = output_data
 
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
@@ -133,41 +135,32 @@ elif run_type == 'sa':
     print("  Creating Models: Done : ",model_names)
     
     # ----- Sensitivity Analysis ----- #
-    X_df, y_df = get_bounded_data(**parameter) # Acquiring the filtered dataset from the reduced dataset.
+    X_df, y_df, _ = get_bounded_data(**parameter) # Acquiring the filtered dataset from the reduced dataset.
     sa_results, input_parameter_list, X_dict , Y_dict = sensitivity_analysis(X_df, y_df, models, input_bounds, parameter['sa_sample_size'])
-    sa_results_for_plot = deepcopy(sa_results)
     print("  Perform SA: Done")
 
     # ----- Saving SA Results ----- #
     if input('   Do you want to save the sensitivity analysis results(y/n):' ) == 'y':
-        # Create the path if it doesn't exist yet
-        os.makedirs(os.path.dirname(output_file), exist_ok = True)
-
-        # Save only the ST sensitivity matrix
-        for key in sa_results.keys():
-            for key2 in sa_results[key].keys():
-                sa_results[key][key2] = sa_results[key][key2]['ST']
-
-        # Save the file as csv
-        for key in sa_results.keys():
-            filenamecsv = output_file + "/sa_array_" + key + ".csv"
-            pd.DataFrame(sa_results[key]).to_csv(filenamecsv)
-            for key2 in sa_results[key].keys():
-                sa_results[key][key2] = sa_results[key][key2].tolist() #  Convert the results to a list for dumping the json file      
-
-        # Saving the results in a json file
-        for key in sa_results.keys():
-            filename = output_file + "sa_results_" + key + ".json"
-            with open(filename, "w") as sa_file:
-                json.dump(sa_results[key], sa_file, separators=(',',':'), indent=4)
+        with open("sa_results.txt", 'a') as sa_out_file:
+            sa_out_file.write(str(sa_results))
         print("  Saving sensitivity analysis results: Done")
     else:
         print("   Saving sensitivity analysis results: Skipped")
 
     # ----- Plotting Results ----- #
     Y_dict['Training Data'] = y_df.values
-    plot_sensitivity_analysis(X_dict, Y_dict, output_path, sa_results_for_plot, model_names, input_parameter_list, parameter)
-    plt.show() if showplot else None
+    plot_densities(X_dict, Y_dict, output_plots, labels=parameter['sa_output_parameter'], is_title=False, title="Density plot")
+    values_list = []
+    model_list = []
+    for (model, values) in Y_dict.items():
+        values_list.append(values)
+        model_list.append(model)
+    
+    plot_17_segment = True if input (" Plot the 17 segment model as well? (y/n)") == 'y' else False
+    plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, parameter['output_parameter_sa_plot'], output_plots, parameter['sa_sobol_indice'])
+    if plot_17_segment:
+        plot_sa_results_17_segments(sa_results, input_parameter_list, output_plots, parameter['sa_17_segment_model'], parameter['sa_sobol_indice'])
+    show_plots() if showplot else None
     print("  Plotting of sa results: Done")
 
     print("Sensitivity Analysis: Done")
@@ -177,32 +170,50 @@ elif run_type == 'uq':
     print("Uncertainty Quantification")
     # ----- Initialize Hyperparameter ----- #
     try:
-        # Path where the file is saved
+        
+        input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
+        output_parameter = parameter['sa_output_parameter']
+        output_parameter_label = parameter.get('output_parameter_label', parameter['sa_output_parameter'])
+
         output_data = './output_data/' + parameter['output_name'] + '/' + 'uncertainty_quantification/'
-        output_plots = output_data           
+        output_plots = output_data
+
+        output_parameter_sa_plot = parameter['output_parameter_sa_plot']
+        sa_17_segment_model = parameter['sa_17_segment_model']
+        sample_size = parameter['sa_sample_size']
+            
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
     
     # ----- DATA Preprocessing ----- #
     X_df, y_df = preprocessing(da=False, **parameter)
-    sa_input_initial_dict = {'y': -5, 'z': 51, 'alpha': 0, 'R': 3.6} # Starting point
+    X_df, y_df, sa_input_initial_dict = get_bounded_data(**parameter)
+    
+    """----- Acquire perturbation -----"""
+    perturbation = parameter.get('input_start_perturbation', 50)
+    if not isinstance(perturbation, collections.abc.Sequence): # If only 1 pertrubation value is given, it will be used for all values
+        perturbation = [perturbation] * len(parameter['input_parameter'])
+        perturbation = dict(zip(parameter['input_parameter'], perturbation))
+    elif len(perturbation) == len(parameter['input_parameter']): # If the number of perturbation is not the exact same, return an error
+        perturbation = dict(zip(parameter['input_parameter'], perturbation))
+    else:
+        print(' Incorrect perturbation value given. Either input only 1 value or the exact number as input value')
+        exit(0)
+        
     metric = 'maximum' # millimeter, percentages, maximum 
-    if metric == 'percentages':  
+    """if metric == 'percentages':  
         sa_input_initial_dict.pop('alpha')
-        X_df.pop('alpha')
+        X_df.pop('alpha')"""
     print("  Data Preprocessing: Done")
 
     # ----- Creating models ----- #
     input_bounds = get_data_bounds(X_df)
     models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
-
-    # ----- Getting bounded data ----- #
-    X_df, y_df = get_bounded_data(**parameter) # Acquiring the filtered dataset from the reduced dataset
     
     # ----- Sensitivity Analysis ----- #  
-    the_model = parameter['sa_17_segment_model'].replace('_',' ')      
-    uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_bounds(X_df=X_df, y_df=y_df, models=models, sa_input_bounds=input_bounds, sample_size=parameter['sa_sample_size'], input_metric=metric, sa_input_initial_dict=sa_input_initial_dict, model=the_model)
+    the_model = sa_17_segment_model.replace('_',' ')      
+    uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_bounds(X_df=X_df, y_df=y_df, models=models, sa_input_bounds=input_bounds, sample_size=sample_size, input_metric=metric, sa_input_initial_dict=sa_input_initial_dict, model=the_model)
     print("  Perform SA: Done")
 
     # ----- Plotting Results ----- #
@@ -219,7 +230,7 @@ elif run_type == 'uq':
         y_annot="Output Variation in %"
         title="Input Variation perc of input param range"
 
-    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=True)
+    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
 
     to_plot = 'some_segments'
     to_plot_dict = {}
@@ -248,7 +259,7 @@ elif run_type == 'uq':
     to_plot_dict['Ekin']['numbers'] = [2]
     to_plot_dict['Ekin']['names'] = ['Ekin']
 
-    bounds_sobol(uncertainty_sobol_dict, output_plots, parameter['input_parameter_label'], dict(zip(parameter['output_parameter'], parameter['output_parameter_label'])), model_name = the_model, sobol_index='ST', 
+    bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(parameter['output_parameter'], output_parameter_label)), model_name = the_model, sobol_index='ST', 
                  fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=False, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
     
     bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \
@@ -260,9 +271,9 @@ elif run_type == 'uq':
                             all_in_one=True, annotation='pstd', figsize=(3.2,3))
     show_plots() if showplot else None 
     
-    print("  Plotting of uq results: Done")
+    print("  Plotting of sa results: Done")
 
-    print("Uncertainty Quantification: Done")
+    print("Sensitivity Analysis Bounds: Done")
 
 else:
     print('Unknown Input: ', run_type)

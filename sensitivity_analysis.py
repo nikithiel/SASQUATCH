@@ -118,4 +118,4 @@ def sensitivity_analysis_bounds(X_df, y_df, models, sa_input_bounds, sample_size
         uncertainty_sobol_dict[uncertainty] = sa_results
         sa_Y_variation_dict[uncertainty] = print_dict_stats(Y_dict, model=model)
 
-    return uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict
+    return uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict.to_dict()

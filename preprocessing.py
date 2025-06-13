@@ -225,21 +225,21 @@ def get_bounded_data(**kwargs):
         # Calculates the average and set bounds based on perturbation
         print( "   Preparing filtered data using average starting point and perturbation values of: " , perturbation)
         tempdf = df.copy()
-        tempdf.loc['average'] = df.mean(axis=0)
+        tempdf.loc['start'] = df.mean(axis=0)
         tempdf.loc['upper'] = df.mean(axis=0)
         tempdf.loc['lower'] = df.mean(axis=0)
         for a in kwargs['input_parameter']:
-            tempdf.loc['upper',a] = ((minmax.iloc[1][a]-tempdf.loc['average'][a]) * (1 + (perturbation[a] / 100)) ) + tempdf.loc['average'][a]
-            tempdf.loc['lower',a] =  tempdf.loc['average'][a] - ((tempdf.loc['average'][a]-minmax.iloc[0][a]) * (1 - (perturbation[a] / 100)))
+            tempdf.loc['upper',a] = ((minmax.iloc[1][a]-tempdf.loc['start'][a]) * (1 + (perturbation[a] / 100)) ) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] =  tempdf.loc['start'][a] - ((tempdf.loc['start'][a]-minmax.iloc[0][a]) * (1 - (perturbation[a] / 100)))
     
     if startType == 'median':
         # Calculates the median and set bounds based on perturbation
         print( f"   Preparing filtered data using median starting point and perturbation values of: " , perturbation)
         tempdf = df.copy()
-        tempdf.loc['median'] = df.median(axis=0)
+        tempdf.loc['start'] = df.median(axis=0)
         for a in kwargs['input_parameter']:
-            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['median'][a])*(1 + (perturbation[a] / 100)) + tempdf.loc['median'][a]
-            tempdf.loc['lower',a] = tempdf.loc['median'][a] - (tempdf.loc['median'][a]-minmax.iloc[0][a])*(1 - (perturbation[a] / 100))
+            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*(1 + (perturbation[a] / 100)) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*(1 - (perturbation[a] / 100))
         
     if startType == 'start':
         # Uses a custom start point and sets bounds based on perturbation
@@ -263,4 +263,4 @@ def get_bounded_data(**kwargs):
     
     print(   f" Data filtering complete with remaining data containing" , finaldf.shape[0] , "points from" , df.shape[0] , "data points")
     finaldf.to_csv(output_path + '/reduced_filtered_data.csv') # Saves the filtered reduced data for potential future use
-    return finaldf[kwargs['input_parameter']], finaldf[kwargs['sa_output_parameter']]
+    return finaldf[kwargs['input_parameter']], finaldf[kwargs['sa_output_parameter']], tempdf['start']
