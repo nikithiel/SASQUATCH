@@ -53,12 +53,13 @@ def sensitivity_analysis_perturbation(X_df, y_df, filtered_df, models, model, sa
     uncertainty_Y_dict = {}
     uncertainty_sobol_dict = {}
     sa_Y_variation_dict = {}
+    
     for uncertainty in uncertainty_metrics:
         perturbed_bounds[uncertainty] = {}
         for param in X_df.keys():
             perturbed_bounds[uncertainty][param] = {}
-            perturbed_bounds[uncertainty][param]['max'] = filtered_df.loc['start'][param] + (filtered_df.loc['upper'][param] - filtered_df.loc['start'][param]) * (uncertainty/100)
-            perturbed_bounds[uncertainty][param]['min'] = filtered_df.loc['start'][param] - (filtered_df.loc['start'][param] - filtered_df.loc['lower'][param]) * (uncertainty/100)
+            perturbed_bounds[uncertainty][param]['max'] = filtered_df.loc['start'][param] + ((filtered_df.loc['upper'][param] - filtered_df.loc['start'][param]) * (uncertainty/100))
+            perturbed_bounds[uncertainty][param]['min'] = filtered_df.loc['start'][param] - ((filtered_df.loc['start'][param] - filtered_df.loc['lower'][param]) * (uncertainty/100))
         
         print(" Starting SA with scaled perturbation at " + str(uncertainty) + " percent")
         sa_results, _, _, Y_dict = sensitivity_analysis(X_df, y_df, models, perturbed_bounds[uncertainty], sample_size= sample_size)

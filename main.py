@@ -25,7 +25,7 @@ from plotting import surrogate_model_predicted_vs_actual, show_plots, plot_sa_re
 from plotting import plot_sa_results_17_segments, plot_boxplots, plot_correlation
 from plotting import plot_feature_distribution, plot_feature_scatterplot, actual_scatter_plot
 from plotting import bounds_variation_plot, bounds_mean_std, bounds_sobol
-from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_bounds, sensitivity_analysis_perturbation
+from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_perturbation
 
 import os
 import pickle
@@ -177,10 +177,6 @@ elif run_type == 'uq':
 
         output_data = './output_data/' + parameter['output_name'] + '/' + 'uncertainty_quantification/'
         output_plots = output_data
-
-        output_parameter_sa_plot = parameter['output_parameter_sa_plot']
-        sa_17_segment_model = parameter['sa_17_segment_model']
-        sample_size = parameter['sa_sample_size']
             
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
@@ -188,17 +184,6 @@ elif run_type == 'uq':
     # ----- DATA Preprocessing ----- #
     X_df, y_df = preprocessing(da=False, **parameter)
     X_df, y_df, sa_input_dict = get_bounded_data(**parameter)
-    
-    """----- Acquire perturbation -----"""
-    perturbation = parameter.get('input_start_perturbation', 50)
-    if not isinstance(perturbation, collections.abc.Sequence): # If only 1 pertrubation value is given, it will be used for all values
-        perturbation = [perturbation] * len(parameter['input_parameter'])
-        perturbation = dict(zip(parameter['input_parameter'], perturbation))
-    elif len(perturbation) == len(parameter['input_parameter']): # If the number of perturbation is not the exact same, return an error
-        perturbation = dict(zip(parameter['input_parameter'], perturbation))
-    else:
-        print(' Incorrect perturbation value given. Either input only 1 value or the exact number as input value')
-        exit(0)
 
     print("  Data Preprocessing: Done")
 
@@ -207,16 +192,16 @@ elif run_type == 'uq':
     models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
     
-    # ----- Sensitivity Analysis ----- #  
-    the_model = sa_17_segment_model.replace('_',' ')      
-    uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_perturbation(X_df=X_df, y_df=y_df, filtered_df = sa_input_dict, models=models, model=sa_17_segment_model.replace('_',' '), sample_size=parameter['sa_sample_size'])
+    # ----- Sensitivity Analysis ----- #    
+    the_model = parameter['sa_17_segment_model'].replace("_"," ") 
+    uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_perturbation(X_df=X_df, y_df=y_df, filtered_df = sa_input_dict, models=models, model=parameter['sa_17_segment_model'].replace('_',' '), sample_size=parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
     # ----- Plotting Results ----- #
     x_annot="Input Variation in %"
     y_annot="Output Variation in %"
     title="Input Variation percentage"
-    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
+    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=True, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
 
     to_plot = 'some_segments'
     to_plot_dict = {}
@@ -246,14 +231,14 @@ elif run_type == 'uq':
     to_plot_dict['Ekin']['names'] = ['Ekin']
 
     bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(parameter['output_parameter'], output_parameter_label)), model_name = the_model, sobol_index='ST', 
-                 fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=False, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
+                 fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=True, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
     
     bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \
-                    model=the_model, is_title=False, title=title+"_bounds_std_region_allinone_nolegend_"+str(metric)+"_"+to_plot, x_annot=x_annot, y_annot="Output Value", \
+                    model=the_model, is_title=True, title=title+"_bounds_std_region_allinone_nolegend_"+str(parameter['input_start'])+"_"+to_plot, x_annot=x_annot, y_annot="Output Value", \
                         all_in_one=True, annotation='legend', figsize=(3.2,9))
     for configuration in to_plot_dict.keys():
         bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[configuration]['numbers'], output_names=to_plot_dict[configuration]['names'], \
-                        model=the_model, is_title=False, title=title+"_bounds_std_region_allinone_"+str(metric)+"_"+configuration, x_annot=x_annot, y_annot="Output Value", \
+                        model=the_model, is_title=True, title=title+"_bounds_std_region_allinone_"+str(parameter['input_start'])+"_"+configuration, x_annot=x_annot, y_annot="Output Value", \
                             all_in_one=True, annotation='pstd', figsize=(3.2,3))
     show_plots() if showplot else None 
     
