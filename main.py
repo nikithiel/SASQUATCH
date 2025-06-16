@@ -25,7 +25,7 @@ from plotting import surrogate_model_predicted_vs_actual, show_plots, plot_sa_re
 from plotting import plot_sa_results_17_segments, plot_boxplots, plot_correlation
 from plotting import plot_feature_distribution, plot_feature_scatterplot, actual_scatter_plot
 from plotting import bounds_variation_plot, bounds_mean_std, bounds_sobol
-from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_bounds
+from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_bounds, sensitivity_analysis_perturbation
 
 import os
 import pickle
@@ -187,7 +187,7 @@ elif run_type == 'uq':
     
     # ----- DATA Preprocessing ----- #
     X_df, y_df = preprocessing(da=False, **parameter)
-    X_df, y_df, sa_input_initial_dict = get_bounded_data(**parameter)
+    X_df, y_df, sa_input_dict = get_bounded_data(**parameter)
     
     """----- Acquire perturbation -----"""
     perturbation = parameter.get('input_start_perturbation', 50)
@@ -200,7 +200,7 @@ elif run_type == 'uq':
         print(' Incorrect perturbation value given. Either input only 1 value or the exact number as input value')
         exit(0)
         
-    metric = 'maximum' # millimeter, percentages, maximum 
+    metric = parameter['metrics'] # millimeter, percentages, maximum 
     """if metric == 'percentages':  
         sa_input_initial_dict.pop('alpha')
         X_df.pop('alpha')"""
@@ -213,23 +213,14 @@ elif run_type == 'uq':
     
     # ----- Sensitivity Analysis ----- #  
     the_model = sa_17_segment_model.replace('_',' ')      
-    uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_bounds(X_df=X_df, y_df=y_df, models=models, sa_input_bounds=input_bounds, sample_size=sample_size, input_metric=metric, sa_input_initial_dict=sa_input_initial_dict, model=the_model)
+    #uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_bounds(X_df=X_df, y_df=y_df, models=models, sa_input_bounds=input_bounds, sample_size=sample_size, input_metric=metric, sa_input_initial_dict=sa_input_initial_dict, model=the_model)
+    uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_perturbation(X_df=X_df, y_df=y_df, filtered_df = sa_input_dict, models=models, model=sa_17_segment_model.replace('_',' '), sample_size=parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
     # ----- Plotting Results ----- #
-    if metric == 'percentages':
-        x_annot="Input Variation in %"
-        y_annot="Output Variation in %"
-        title="Input Variation percentage"
-    elif metric == 'millimeter':
-        x_annot="Input Variation in mm"
-        y_annot="Output Variation in %"
-        title="Input Variation mm"
-    elif metric == 'maximum':
-        x_annot="Input Variation in %"
-        y_annot="Output Variation in %"
-        title="Input Variation perc of input param range"
-
+    x_annot="Input Variation in %"
+    y_annot="Output Variation in %"
+    title="Input Variation percentage"
     bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
 
     to_plot = 'some_segments'

@@ -217,9 +217,8 @@ def get_bounded_data(**kwargs):
     minmax = df.agg(['min', 'max'])
     
     if startType not in ['avg', 'median', 'start']:
-        # Invalid start type will simply return the reduced data set
-        print(f"   Invalid start type: {startType}. The data will not be bounded.")
-        return df[kwargs['input_parameter']], df[kwargs['sa_output_parameter']]
+        print(f" Invalid starting point type found! Will default to average starting point.")
+        startType = 'avg' # Will always default to average starting point
     
     if startType == 'avg':
         # Calculates the average and set bounds based on perturbation
@@ -263,4 +262,5 @@ def get_bounded_data(**kwargs):
     
     print(   f" Data filtering complete with remaining data containing" , finaldf.shape[0] , "points from" , df.shape[0] , "data points")
     finaldf.to_csv(output_path + '/reduced_filtered_data.csv') # Saves the filtered reduced data for potential future use
-    return finaldf[kwargs['input_parameter']], finaldf[kwargs['sa_output_parameter']], tempdf['start']
+    # returns the filtered input, filtered output. Returns alongside that the starting point, upper bound and lower bounds of each dataset after perturbation.
+    return finaldf[kwargs['input_parameter']], finaldf[kwargs['sa_output_parameter']], tempdf
