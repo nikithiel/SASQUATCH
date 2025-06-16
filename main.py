@@ -199,11 +199,7 @@ elif run_type == 'uq':
     else:
         print(' Incorrect perturbation value given. Either input only 1 value or the exact number as input value')
         exit(0)
-        
-    metric = parameter['metrics'] # millimeter, percentages, maximum 
-    """if metric == 'percentages':  
-        sa_input_initial_dict.pop('alpha')
-        X_df.pop('alpha')"""
+
     print("  Data Preprocessing: Done")
 
     # ----- Creating models ----- #
@@ -213,7 +209,6 @@ elif run_type == 'uq':
     
     # ----- Sensitivity Analysis ----- #  
     the_model = sa_17_segment_model.replace('_',' ')      
-    #uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_bounds(X_df=X_df, y_df=y_df, models=models, sa_input_bounds=input_bounds, sample_size=sample_size, input_metric=metric, sa_input_initial_dict=sa_input_initial_dict, model=the_model)
     uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_perturbation(X_df=X_df, y_df=y_df, filtered_df = sa_input_dict, models=models, model=sa_17_segment_model.replace('_',' '), sample_size=parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
