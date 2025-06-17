@@ -198,10 +198,11 @@ elif run_type == 'uq':
     print("  Perform SA: Done")
 
     # ----- Plotting Results ----- #
+    is_title = False
     x_annot="Input Variation in %"
     y_annot="Output Variation in %"
     title="Input Variation percentage"
-    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=True, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
+    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=is_title, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
 
     to_plot = 'some_segments'
     to_plot_dict = {}
@@ -231,14 +232,14 @@ elif run_type == 'uq':
     to_plot_dict['Ekin']['names'] = ['Ekin']
 
     bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(parameter['output_parameter'], output_parameter_label)), model_name = the_model, sobol_index='ST', 
-                 fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=True, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
+                 fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=is_title, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
     
     bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \
-                    model=the_model, is_title=True, title=title+"_bounds_std_region_allinone_nolegend_"+str(parameter['input_start'])+"_"+to_plot, x_annot=x_annot, y_annot="Output Value", \
+                    model=the_model, is_title=is_title, title=title+"_bounds_std_region_allinone_nolegend_"+str(parameter['input_start'])+"_"+to_plot, x_annot=x_annot, y_annot="Output Value", \
                         all_in_one=True, annotation='legend', figsize=(3.2,9))
     for configuration in to_plot_dict.keys():
         bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[configuration]['numbers'], output_names=to_plot_dict[configuration]['names'], \
-                        model=the_model, is_title=True, title=title+"_bounds_std_region_allinone_"+str(parameter['input_start'])+"_"+configuration, x_annot=x_annot, y_annot="Output Value", \
+                        model=the_model, is_title=is_title, title=title+"_bounds_std_region_allinone_"+str(parameter['input_start'])+"_"+configuration, x_annot=x_annot, y_annot="Output Value", \
                             all_in_one=True, annotation='pstd', figsize=(3.2,3))
     show_plots() if showplot else None 
     

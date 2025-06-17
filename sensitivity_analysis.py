@@ -49,6 +49,23 @@ def sensitivity_analysis(X_df, y_df, models, input_bounds, sample_size):
     return sobol_indices_dict, input_bounds.keys(), X_dict, Y_dict
 
 def sensitivity_analysis_perturbation(X_df, y_df, filtered_df, models, model, sample_size, uncertainty_metrics = np.linspace(10,100,10)):
+    """
+    Performs sensitivity analysis on bounded data using different bounds variations.
+
+    Args:
+        - X_df: Bounded input data
+        - y_df: Bounded output data
+        - filtered_df: The starting point, upper perturbed bound and lower perturbed bound of the dataset
+        - models: Models used for the training
+        - model: The model for plotting?
+        - sample_size: The sample size during sampling for sensitivity analysis
+        - uncertainty_metrics: How would the perturbations be scaled. e.g: 10 20 30 40 ... 100.
+
+    Returns:
+        - uncertainty_Y_dict: Dictionary containing the output data uncertainty based on each perturbation
+        - uncertainty_sobol_dict: Dictionary containing the sobol outputs for each perturbation
+        - sa_Y_variation_dict: Dictionary containing the output variation during sensitivity analysis
+    """
     perturbed_bounds = {}
     uncertainty_Y_dict = {}
     uncertainty_sobol_dict = {}
