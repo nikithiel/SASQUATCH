@@ -21,7 +21,7 @@ scaler none
 save_data none
 
 # Models
-models LR RF NIPCE #KNN Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree NIPCE GP
+models NIPCE #KNN Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree NIPCE GP
 NIPCE_order 2
 
 # Training and Testing
@@ -40,20 +40,22 @@ is_plotting_df_boxplot False
 is_plotting_model_comparison True
 is_plotting_sa_heatmap True
 number_of_top_models 6
-plot_type pdf png
+plot_type pdf
 
 # Sensitivity Analysis
-sa_models NIPCE GP LR
 sa_sobol_indice ST
-sa_17_segment_model LR
+sa_17_segment_model NIPCE_2
 sa_sample_size 512
 sa_output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
 input_start median
 input_start_point 1 2 3 4 
-input_start_perturbation 20 40 10 60
+input_start_perturbation 63 63 100 63
 output_parameter_sa_plot WSS Eloss Ekin TVPG
-output_units_sa_plot Pa Pa*m$^3$ Pa*m$^3$ Pa
-output_parameter_sa_plot_label WSS Eloss Ekin TVPG
+output_units_sa_plot Pa Pa*m$^3$ Pa*m$^3$ Pa 
+output_parameter_sa_plot_label WSS $E_{loss}$ $E_{kin}$ TVPG
 
 # Uncertainty Quantification 
 uq_metric percentage
+uq_output_parameter [WSS,TVPG] [Eloss,Ekin]
+uq_output_parameter_label [WSS,TVPG] [$E_{loss}$,$E_{kin}$]
+uq_output_units Pa Pa*m$^3$

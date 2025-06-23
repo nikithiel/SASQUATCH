@@ -737,12 +737,14 @@ def bounds_variation_plot(data, output_parameter, output_path, is_title=True, ti
     uncertainties = sorted(data.keys())
     param_names = output_parameter
 
-    num_plots = len(data[uncertainties[0]])
+    #num_plots = len(data[uncertainties[0]])
+    num_plots = len(output_parameter)
 
     # Custom color palette
     colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
     gray_palette = plt.cm.gray(np.linspace(0.1, 0.8, 17))  # Varying shades of gray
     custom_palette = colors + list(gray_palette)
+    cm = plt.get_cmap('gist_rainbow')
 
     fig, ax = plt.subplots(figsize=(3.5,4.5))#get_figsize())
 
@@ -750,8 +752,9 @@ def bounds_variation_plot(data, output_parameter, output_path, is_title=True, ti
         output_variation = []
         for uncertainty in uncertainties:
             output_variation.append(data[uncertainty][i-1])
-        ax.plot(np.array(uncertainties), output_variation, label=output_dict[param_names[i-1]], color=custom_palette[i-1], linewidth = 2. if i-1 < 4 else 1.)
-
+        line = ax.plot(np.array(uncertainties), output_variation, label=output_dict[param_names[i-1]], linewidth = 2. if i-1 < 4 else 1.)
+        line[0].set_color(cm(i//1 * 1.0/num_plots))
+        
     ax.set_xlabel(x_annot)
     ax.set_ylabel(y_annot)
     ax.yaxis.set_label_position('left')
@@ -822,22 +825,19 @@ def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP'
     plt.rcParams['font.size'] = font_size
 
     uncertainty_values_to_plot = list(data.keys())  # Uncertainty values to plot
-    output_names = list(data[uncertainty_values_to_plot[0]][model_name].keys())
-
-    num_cols = 3
-    num_rows = (len(output_names) + 2) // num_cols  # Determine number of rows for subplots
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=fig_size)
+    #output_names = list(data[uncertainty_values_to_plot[0]][model_name].keys())
+    output_names = output_labels.keys()
+    
+    row = col = int(math.sqrt(len(output_names))) 
+    fig, axes = plt.subplots(row,col, figsize=fig_size)
     plt.subplots_adjust(bottom=0.1, 
                     left=0.1, 
                     top = 0.975, 
                     right=0.975, hspace=0.7)
-    transformation = [3, 0, 13, 17, 18, 20, 7, 8, 9, 16, 1, 2, 11, 10, 19, 4, 12, 14, 15, 5, 6]
-    outputs_transformed = [output_names[i] for i in transformation]
 
-    for i, output in enumerate(output_names):
-        row = i // num_cols
-        col = i % num_cols
-        ax = axes[row, col] if num_rows > 1 else axes[col]
+    i=j=k = 0
+    for _, output in enumerate(output_names):
+        ax = axes[i][j] if row > 1 else axes
 
         # Extract data to plot
         sobol_values = []
@@ -847,12 +847,25 @@ def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP'
         # Plotting
         ax.plot(uncertainty_values_to_plot, sobol_values, marker='o', markersize = 3, linewidth=2)
         ax.set_title(output_labels[output], fontsize=font_size)
-        if i%num_cols == 0: ax.set_ylabel(f"S$_{{{sobol_index[-1]}}}$")
+        if j == 0: ax.set_ylabel(f"S$_{{{sobol_index[-1]}}}$")
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.1f}'.format(x)))
-        if round((i-1)/num_cols) == num_rows-1: ax.set_xlabel("Variation in mm")
+        if i == col -1: ax.set_xlabel("Variation in mm")
         #if round((i-1)/num_cols) == num_rows-1: ax.set_xlabel(" ")
         ax.grid(True)
-
+        if j == row - 1:
+            i += 1
+            j = 0
+        else:
+            j += 1            
+    
+    # Delete the remaining empty axises
+    if j != col - 1: 
+        while i <= row - 1:
+            while j <= row - 1:
+                axes[i][j].set_axis_off()
+                j += 1 
+            i += 1
+            j = 0    
     fig.legend(labels=input_labels, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(input_labels))
     plt.suptitle(title if is_title else None, fontsize=font_size)
     #plt.tight_layout()#h_pad=0, w_pad=0)

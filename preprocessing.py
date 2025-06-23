@@ -228,8 +228,8 @@ def get_bounded_data(**kwargs):
         tempdf.loc['upper'] = df.mean(axis=0)
         tempdf.loc['lower'] = df.mean(axis=0)
         for a in kwargs['input_parameter']:
-            tempdf.loc['upper',a] = ((minmax.iloc[1][a]-tempdf.loc['start'][a]) * (1 + (perturbation[a] / 100)) ) + tempdf.loc['start'][a]
-            tempdf.loc['lower',a] =  tempdf.loc['start'][a] - ((tempdf.loc['start'][a]-minmax.iloc[0][a]) * (1 - (perturbation[a] / 100)))
+            tempdf.loc['upper',a] = ((minmax.iloc[1][a]-tempdf.loc['start'][a]) * ((perturbation[a] / 100)) ) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] =  tempdf.loc['start'][a] - ((tempdf.loc['start'][a]-minmax.iloc[0][a]) * ((perturbation[a] / 100)))
     
     if startType == 'median':
         # Calculates the median and set bounds based on perturbation
@@ -237,8 +237,8 @@ def get_bounded_data(**kwargs):
         tempdf = df.copy()
         tempdf.loc['start'] = df.median(axis=0)
         for a in kwargs['input_parameter']:
-            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*(1 + (perturbation[a] / 100)) + tempdf.loc['start'][a]
-            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*(1 - (perturbation[a] / 100))
+            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*((perturbation[a] / 100)) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*((perturbation[a] / 100))
         
     if startType == 'start':
         # Uses a custom start point and sets bounds based on perturbation
@@ -249,8 +249,8 @@ def get_bounded_data(**kwargs):
         tempdf = df.copy()
         tempdf.loc['start'] = start
         for a in kwargs['input_parameter']:
-            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*(1 + (perturbation[a] / 100)) + tempdf.loc['start'][a]
-            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*(1 - (perturbation[a] / 100))
+            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*((perturbation[a] / 100)) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*((perturbation[a] / 100))
 
     finaldf = df.copy() # The dataframe to be returned
     for a in kwargs['input_parameter']:

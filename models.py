@@ -63,7 +63,7 @@ def creatingModels(bounds, parameter):
                 orders = [orders]
 
             for order in orders:
-                nipce_name = 'NIPCE_' + str(order)
+                nipce_name = 'NIPCE ' + str(order)
                 models[nipce_name] = NIPCE(order=order, distributions=distributions)
                 final_model_names.append(nipce_name)
         else:

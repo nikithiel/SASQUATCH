@@ -184,7 +184,6 @@ elif run_type == 'uq':
     # ----- DATA Preprocessing ----- #
     X_df, y_df = preprocessing(da=False, **parameter)
     X_df, y_df, sa_input_dict = get_bounded_data(**parameter)
-
     print("  Data Preprocessing: Done")
 
     # ----- Creating models ----- #
@@ -192,16 +191,28 @@ elif run_type == 'uq':
     models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
     
+    # ----- Checking Metrics ----- #
+    output_parameter_list = [a[1:-1].split(",") for a in parameter["uq_output_parameter"]] # Acquires the grouped parameters
+    output_parameter_labels = [a[1:-1].split(",") for a in parameter["uq_output_parameter_label"]] # Acquires the grouped parameters labels matching the parameters
+    
+    # ----- Making the labels function compatible ----- #
+    output_parameter_units = []
+    n = 0
+    for n in range(len(output_parameter_list)):
+        for i in range((len(output_parameter_list[n]))):
+            output_parameter_units.append(parameter['uq_output_units'][n])
+    output_parameter_list = [a for b in output_parameter_list for a in b]
+    output_parameter_labels = [a for b in output_parameter_labels for a in b]
+    
     # ----- Sensitivity Analysis ----- #    
     the_model = parameter['sa_17_segment_model'].replace("_"," ") 
     uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_perturbation(X_df=X_df, y_df=y_df, filtered_df = sa_input_dict, models=models, model=parameter['sa_17_segment_model'].replace('_',' '), sample_size=parameter['sa_sample_size'])
     print("  Perform SA: Done")
 
     # ----- Plotting Results ----- #
-    x_annot="Input Variation in %"
+    x_annot="Scaled Input Variation in %"
     y_annot="Output Variation in %"
     title="Input Variation percentage"
-    bounds_variation_plot(sa_Y_variation_dict, parameter['sa_output_parameter'], output_plots, is_title=True, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=False)
 
     to_plot = 'some_segments'
     to_plot_dict = {}
@@ -229,13 +240,16 @@ elif run_type == 'uq':
     
     to_plot_dict['Ekin']['numbers'] = [2]
     to_plot_dict['Ekin']['names'] = ['Ekin']
+    
+    bounds_variation_plot(sa_Y_variation_dict, output_parameter_list, output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=True)
 
-    bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(parameter['output_parameter'], output_parameter_label)), model_name = the_model, sobol_index='ST', 
-                 fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=True, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
+    bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(output_parameter_list, output_parameter_labels)), model_name = the_model, sobol_index='ST', 
+                 fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=False, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
     
     bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \
                     model=the_model, is_title=True, title=title+"_bounds_std_region_allinone_nolegend_"+str(parameter['input_start'])+"_"+to_plot, x_annot=x_annot, y_annot="Output Value", \
                         all_in_one=True, annotation='legend', figsize=(3.2,9))
+    
     for configuration in to_plot_dict.keys():
         bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[configuration]['numbers'], output_names=to_plot_dict[configuration]['names'], \
                         model=the_model, is_title=True, title=title+"_bounds_std_region_allinone_"+str(parameter['input_start'])+"_"+configuration, x_annot=x_annot, y_annot="Output Value", \
