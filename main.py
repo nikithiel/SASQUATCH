@@ -242,18 +242,21 @@ elif run_type == 'uq':
     to_plot_dict['Ekin']['numbers'] = [2]
     to_plot_dict['Ekin']['names'] = ['Ekin']
     
+    to_plot_dict['custom']['names'] = output_parameter_list
+    to_plot_dict['custom']['numbers'] = [parameter['sa_output_parameter'].index(a) for a in output_parameter_list]
+    
     bounds_variation_plot(sa_Y_variation_dict, output_parameter_list, output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=True)
 
     bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(output_parameter_list, output_parameter_labels)), model_name = the_model, sobol_index='ST', 
                  fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=False, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
     
     bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \
-                    model=the_model, is_title=is_title, title=title+"_bounds std region allinone nolegend "+str(parameter['input_start'])+" "+to_plot, x_annot=x_annot, y_annot="Output Value", \
+                    model=the_model, is_title=False, title=title+"_bounds std region allinone nolegend "+str(parameter['input_start'])+" "+to_plot, x_annot=x_annot, y_annot="Output Value", \
                         all_in_one=True, annotation='legend', figsize=(3.2,9))
     
     for configuration in to_plot_dict.keys():
         bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[configuration]['numbers'], output_names=to_plot_dict[configuration]['names'], \
-                        model=the_model, is_title=is_title, title=title+" bounds std region allinone_"+str(parameter['input_start'])+" "+configuration, x_annot=x_annot, y_annot="Output Value", \
+                        model=the_model, is_title=False, title=title+" bounds std region allinone_"+str(parameter['input_start'])+" "+configuration, x_annot=x_annot, y_annot="Output Value", \
                             all_in_one=True, annotation='pstd', figsize=(3.2,3))
     show_plots() if showplot else None 
     

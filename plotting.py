@@ -741,13 +741,10 @@ def bounds_variation_plot(data, output_parameter, output_path, is_title=True, ti
     num_plots = len(output_parameter)
 
     # Custom color palette
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
-    gray_palette = plt.cm.gray(np.linspace(0.1, 0.8, 17))  # Varying shades of gray
-    custom_palette = colors + list(gray_palette)
     cm = plt.get_cmap('gist_rainbow')
 
     plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
-    fig, ax = plt.subplots(figsize=(3.5,4.5))#get_figsize())
+    _, ax = plt.subplots(figsize=(3.5,4.5))
 
     for i in range(num_plots, 0,-1):
         output_variation = []
@@ -779,7 +776,7 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
     uncertainties = sorted(data.keys())
     num_params = len(output_parameters)
     num_plots = len(data[uncertainties[0]][model][0])
-    plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
+    #plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
 
     fig, axes = plt.subplots(num_params if all_in_one == False else 1, 1, figsize=figsize)
     if num_params < 10: colors = plt.get_cmap('tab10').colors
@@ -823,9 +820,6 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
 def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP', sobol_index='ST', 
                  fig_size=(6.5, 9), font_size=10, is_title=True, title="Bounds sobol", x_annot="Input Variation", y_annot="Sensitivity"):    
 
-    plt.rcParams['mathtext.fontset'] = 'stix'
-    plt.rcParams['font.family'] = 'STIXGeneral'
-    plt.rcParams['font.size'] = font_size
     plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
 
     uncertainty_values_to_plot = list(data.keys())  # Uncertainty values to plot
