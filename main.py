@@ -172,7 +172,6 @@ elif run_type == 'uq':
     try:
         
         input_parameter_label = parameter.get('input_parameter_label', parameter['input_parameter'])
-        output_parameter = parameter['sa_output_parameter']
         output_parameter_label = parameter.get('output_parameter_label', parameter['sa_output_parameter'])
 
         output_data = './output_data/' + parameter['output_name'] + '/' + 'uncertainty_quantification/'
@@ -191,19 +190,6 @@ elif run_type == 'uq':
     models, model_names = creatingModels(input_bounds, parameter)
     print("  Creating Models: Done : ",model_names)
     
-    # ----- Checking Metrics ----- #
-    output_parameter_list = [a[1:-1].split(",") for a in parameter["uq_output_parameter"]] # Acquires the grouped parameters
-    output_parameter_labels = [a[1:-1].split(",") for a in parameter["uq_output_parameter_label"]] # Acquires the grouped parameters labels matching the parameters
-    
-    # ----- Making the labels function compatible ----- #
-    output_parameter_units = []
-    n = 0
-    for n in range(len(output_parameter_list)):
-        for i in range((len(output_parameter_list[n]))):
-            output_parameter_units.append(parameter['uq_output_units'][n])
-    output_parameter_list = [a for b in output_parameter_list for a in b]
-    output_parameter_labels = [a for b in output_parameter_labels for a in b]
-    
     # ----- Sensitivity Analysis ----- #    
     the_model = parameter['sa_17_segment_model'].replace("_"," ") 
     uncertainty_Y_dict, uncertainty_sobol_dict, sa_Y_variation_dict = sensitivity_analysis_perturbation(X_df=X_df, y_df=y_df, filtered_df = sa_input_dict, models=models, model=parameter['sa_17_segment_model'].replace('_',' '), sample_size=parameter['sa_sample_size'])
@@ -212,52 +198,56 @@ elif run_type == 'uq':
     # ----- Plotting Results ----- #
     x_annot="Scaled Input Variation in %"
     y_annot="Output Variation in %"
-    title="Input Variation percentage"
+    title="Input Variation Percentage"
 
-    to_plot = 'some_segments'
-    to_plot_dict = {}
-    to_plot_dict['all_segments'] = {}
-    to_plot_dict['some_segments'] = {}
-    to_plot_dict['tvpg'] = {}
-    to_plot_dict['E'] = {}
-    to_plot_dict['Eloss'] = {}
-    to_plot_dict['Ekin'] = {}
-    to_plot_dict['custom'] = {}
-    
-    to_plot_dict['all_segments']['numbers'] = [0,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-    to_plot_dict['all_segments']['names'] = ['WSS','wss-1',	'wss-2', 'wss-3','wss-4','wss-5','wss-6','wss-7','wss-8','wss-9','wss-10','wss-11','wss-12','wss-13','wss-14','wss-15','wss-16','wss-17']
+    # ----- Ploting metrics ----- #
+    if not parameter["uq_output_parameter"]:
+        output_parameter_list = parameter["sa_output_parameter"]
+        output_parameter_labels = parameter.get('output_parameter_label', parameter['sa_output_parameter'])
+        output_parameter_units = None
+    else:
+        output_parameter_list = [a[1:-1].split(",") for a in parameter["uq_output_parameter"]] # Acquires the grouped parameters
+        output_parameter_labels = [a[1:-1].split(",") for a in parameter["uq_output_parameter_label"]] # Acquires the grouped parameters labels matching the parameters
+        output_parameter_units = parameter['uq_output_units']
 
-    to_plot_dict['some_segments']['numbers'] = [4,5,6,8,10,11,17,19,20]
-    to_plot_dict['some_segments']['names'] = ['wss-1', 'wss-2', 'wss-3','wss-5','wss-7','wss-8','wss-14','wss-16','wss-17']
+        output_parameter_combined_units = []
+        n = 0
+        for n in range(len(output_parameter_list)):
+            for i in range((len(output_parameter_list[n]))):
+                output_parameter_combined_units.append(parameter['uq_output_units'][n])
+        output_parameter_combined_list = [a for b in output_parameter_list for a in b]
+        output_parameter_combined_labels = [a for b in output_parameter_labels for a in b]
 
-    to_plot_dict['tvpg']['numbers'] = [3]
-    to_plot_dict['tvpg']['names'] = ['TVPG']
+    # Plot all the variations for parameters in all the groups combined
+    
+    
+    if parameter["uq_output_parameter"]:
+        bounds_variation_plot(sa_Y_variation_dict, output_parameter_combined_list, output_parameter_combined_labels, output_plots, is_title=False, title=title+" for model "+the_model, x_annot=x_annot, y_annot=y_annot, legend=True)
 
-    to_plot_dict['E']['numbers'] = [1,2]
-    to_plot_dict['E']['names'] = ['Eloss', 'Ekin']
-    
-    to_plot_dict['Eloss']['numbers'] = [1]
-    to_plot_dict['Eloss']['names'] = ['Eloss']
-    
-    to_plot_dict['Ekin']['numbers'] = [2]
-    to_plot_dict['Ekin']['names'] = ['Ekin']
-    
-    to_plot_dict['custom']['names'] = output_parameter_list
-    to_plot_dict['custom']['numbers'] = [parameter['sa_output_parameter'].index(a) for a in output_parameter_list]
-    
-    bounds_variation_plot(sa_Y_variation_dict, output_parameter_list, output_plots, is_title=False, title=title+"_small_"+the_model, x_annot=x_annot, y_annot=y_annot, legend=True)
+        for i in range(len(output_parameter_list)):
+            
+            input_custom_label = [i + " (" + str(j) + " %)" for i,j in zip(input_parameter_label,parameter['input_start_perturbation'])] if len(parameter['input_start_perturbation']) != 1 else [i + " (" + str(parameter['input_start_perturbation']) + "%)" for i in input_parameter_label]
 
-    bounds_sobol(uncertainty_sobol_dict, output_plots, input_parameter_label, dict(zip(output_parameter_list, output_parameter_labels)), model_name = the_model, sobol_index='ST', 
-                 fig_size=(16.2/2.54, 21.5/2.54), font_size=10, is_title=False, title=title+"_Bounds_sobol_allinone", x_annot=x_annot, y_annot="Sensitivity")
-    
-    bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[to_plot]['numbers'], output_names=to_plot_dict[to_plot]['names'], \
-                    model=the_model, is_title=False, title=title+"_bounds std region allinone nolegend "+str(parameter['input_start'])+" "+to_plot, x_annot=x_annot, y_annot="Output Value", \
-                        all_in_one=True, annotation='legend', figsize=(3.2,9))
-    
-    for configuration in to_plot_dict.keys():
-        bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=to_plot_dict[configuration]['numbers'], output_names=to_plot_dict[configuration]['names'], \
-                        model=the_model, is_title=False, title=title+" bounds std region allinone_"+str(parameter['input_start'])+" "+configuration, x_annot=x_annot, y_annot="Output Value", \
-                            all_in_one=True, annotation='pstd', figsize=(3.2,3))
+            bounds_sobol(uncertainty_sobol_dict, output_plots, input_custom_label, dict(zip(output_parameter_list[i], output_parameter_labels[i])), model_name = the_model, sobol_index='ST', 
+                        fig_size=(21.5/2.54, 21.5/2.54), font_size=10, is_title=False, title=title + " Bounds in sobol for group " + str(output_parameter_list[i]), x_annot=x_annot, y_annot="Sensitivity")
+
+            y_annot = "Output Value in " + output_parameter_units[i] if output_parameter_units else "Output Value"
+            bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=[parameter['sa_output_parameter'].index(a) for a in output_parameter_list[i]], output_names=output_parameter_list[i], \
+                            model=the_model, is_title=False, title=title+" bounds with std using start point "+ str(parameter['input_start'])+" for group "+ str(output_parameter_list[i]), x_annot=x_annot, y_annot=y_annot, \
+                                all_in_one=True, annotation='legend', figsize=(3.2,9))
+    else:
+        bounds_variation_plot(sa_Y_variation_dict, output_parameter_list, output_parameter_labels, output_plots, is_title=False, title=title+" on all parameters for model "+the_model, x_annot=x_annot, y_annot=y_annot, legend=True)
+
+        input_custom_label = [i + " (" + str(j) + " %)" for i,j in zip(input_parameter_label,parameter['input_start_perturbation'])] if len(parameter['input_start_perturbation']) != 1 else [i + " (" + str(parameter['input_start_perturbation']) + "%)" for i in input_parameter_label]
+
+        bounds_sobol(uncertainty_sobol_dict, output_plots, input_custom_label, dict(zip(output_parameter_list, output_parameter_labels)), model_name = the_model, sobol_index='ST', 
+                    fig_size=(21.5/2.54, 21.5/2.54), font_size=10, is_title=False, title=title + " Bounds in sobol for all parameters", x_annot=x_annot, y_annot="Sensitivity")
+
+        y_annot = "Output Value in " + output_parameter_units[i] if output_parameter_units else "Output Value"
+        bounds_mean_std(uncertainty_Y_dict, output_plots, output_parameters=[parameter['sa_output_parameter'].index(a) for a in output_parameter_list], output_names=output_parameter_list, \
+                        model=the_model, is_title=False, title=title+" bounds with std using start point "+ str(parameter['input_start'])+" for all parameters", x_annot=x_annot, y_annot=y_annot, \
+                            all_in_one=True, annotation='legend', figsize=(3.2,9))
+
     show_plots() if showplot else None 
     
     print("  Plotting of sa results: Done")

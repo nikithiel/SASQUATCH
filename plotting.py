@@ -725,7 +725,7 @@ def get_figsize():
     """
     return (6.5, 4)
 
-def bounds_variation_plot(data, output_parameter, output_path, is_title=True, title="Bounds Variation plot", x_annot="Input Variation", y_annot="Output Variation", legend=True):
+def bounds_variation_plot(data, output_parameter, output_labels, output_path, is_title=True, title="Bounds Variation plot", x_annot="Input Variation", y_annot="Output Variation", legend=True):
     """Plots and saves the distribution of each feature of the DataFrame.
     Args:
         - X_dict: dict -> Dictionary containing arrays for each model's test results
@@ -750,7 +750,10 @@ def bounds_variation_plot(data, output_parameter, output_path, is_title=True, ti
         output_variation = []
         for uncertainty in uncertainties:
             output_variation.append(data[uncertainty][i-1])
-        line = ax.plot(np.array(uncertainties), output_variation, label=output_dict[param_names[i-1]], linewidth = 2. if i-1 < 4 else 1.)
+        if output_labels:
+            line = ax.plot(np.array(uncertainties), output_variation, label=output_labels[i-1], linewidth = 2. if i-1 < 4 else 1.)
+        else:
+            line = ax.plot(np.array(uncertainties), output_variation, linewidth = 2. if i-1 < 4 else 1.)
         line[0].set_color(cm(i//1 * 1.0/num_plots))
         
     ax.set_xlabel(x_annot)
@@ -779,8 +782,9 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
     #plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
 
     fig, axes = plt.subplots(num_params if all_in_one == False else 1, 1, figsize=figsize)
-    if num_params < 10: colors = plt.get_cmap('tab10').colors
-    else: colors = plt.get_cmap('tab20').colors
+    """if num_params < 10: colors = plt.get_cmap('tab10').colors
+    else: colors = plt.get_cmap('gist_rainbow').colors"""
+    cm = plt.get_cmap('gist_rainbow')
     for i, output_parameter in enumerate(output_parameters):
         plot_data = []
         for uncertainty in uncertainties:
@@ -795,8 +799,8 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
 
         # Plotting
         ax = axes[i] if num_params > 1 and all_in_one == False else axes
-        ax.plot(uncertainties, mean_values, color=colors[i], label=output_dict[output_names[i]]+" Mean")
-        ax.fill_between(uncertainties, mean_values - std_values, mean_values + std_values, color=colors[i], alpha=0.4, label='SD' if num_params==1 else None)
+        ax.plot(uncertainties, mean_values, color=cm(i//1 * 1.0/num_plots), label=output_dict[output_names[i]]+" Mean")
+        ax.fill_between(uncertainties, mean_values - std_values, mean_values + std_values, color=cm(i//1 * 1.0/num_plots), alpha=0.4, label='SD' if num_params==1 else None)
         ax.set_xlabel(x_annot)
         ax.set_ylabel(y_annot)
         if all_in_one==False:
@@ -812,7 +816,7 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
             if annotation == 'legend' and j == len(uncertainties)-1: ax.text(x, mean_val, f'{output_dict[output_names[i]]}, {std}={100*std_val/mean_val:.2f}%', ha='center', va='bottom')
 
     # Title and other adjustments
-    fig.legend(labels=input_label_list, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(input_label_list))
+    # fig.legend(labels=input_label_list, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(input_label_list))
     fig.suptitle(title if is_title else None)
     plt.tight_layout()
     save_plot(plt, output_path + title + "_" + model + "_" + annotation)
@@ -826,16 +830,21 @@ def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP'
     #output_names = list(data[uncertainty_values_to_plot[0]][model_name].keys())
     output_names = output_labels.keys()
     
-    row = col = int(math.sqrt(len(output_names))) 
+    if len(output_names) < 3:
+        row = 1
+        col = len(output_names)
+    else:
+        row = col = math.ceil(math.sqrt(len(output_names)))
+
     fig, axes = plt.subplots(row,col, figsize=fig_size)
-    plt.subplots_adjust(bottom=0.1, 
+    plt.subplots_adjust(bottom=0.5, 
                     left=0.1, 
                     top = 0.975, 
                     right=0.975, hspace=0.7)
 
-    i=j=k = 0
+    i=j=k=0
     for _, output in enumerate(output_names):
-        ax = axes[i][j] if row > 1 else axes
+        ax = axes[j][i] if row > 2 else axes[i]
 
         # Extract data to plot
         sobol_values = []
@@ -845,28 +854,30 @@ def bounds_sobol(data, output_path, input_labels, output_labels, model_name='GP'
         # Plotting
         ax.plot(uncertainty_values_to_plot, sobol_values, marker='o', markersize = 3, linewidth=2)
         ax.set_title(output_labels[output], fontsize=font_size)
-        if j == 0: ax.set_ylabel(f"S$_{{{sobol_index[-1]}}}$")
+        if i == 0: ax.set_ylabel(f"S$_{{{sobol_index[-1]}}}$")
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:.1f}'.format(x)))
-        if i == col -1: ax.set_xlabel("Variation in mm")
+        if len(output_names) - col - 1 < k < len(output_names): ax.set_xlabel(x_annot)
         #if round((i-1)/num_cols) == num_rows-1: ax.set_xlabel(" ")
         ax.grid(True)
-        if j == row - 1:
-            i += 1
-            j = 0
+        if i == col - 1:
+            j += 1
+            i = 0
         else:
-            j += 1            
+            i += 1
+        k+=1     
     
     # Delete the remaining empty axises
-    if j != col - 1: 
-        while i <= row - 1:
-            while j <= row - 1:
-                axes[i][j].set_axis_off()
-                j += 1 
-            i += 1
-            j = 0    
-    fig.legend(labels=input_labels, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(input_labels))
+    if i != col - 1: 
+        while j <= row - 1:
+            while i <= row - 1:
+                axes[j][i].set_axis_off()
+                i += 1 
+            j += 1
+            i = 0    
+    fig.legend(labels=input_labels, bbox_to_anchor=(1.01, 0.5), loc='center left')
+    #fig.legend(labels=input_labels, ncol=len(input_labels))
     plt.suptitle(title if is_title else None, fontsize=font_size)
-    #plt.tight_layout()#h_pad=0, w_pad=0)
+    plt.tight_layout()
     save_plot(plt, output_path + title + '_' + model_name + '_' + sobol_index)
     plt.show()
 
@@ -936,4 +947,4 @@ def actual_scatter_plot(X_df, y_df, output_path, is_title=True, title="Pairplot 
         j = 0
 
     fig.tight_layout()
-    save_plot(plt=plt, file_path=output_path + title, dpi=600)
+    save_plot(plt=plt, file_path=output_path + title, dpi=600, bbox_inches='tight')
