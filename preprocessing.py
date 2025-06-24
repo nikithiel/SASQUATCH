@@ -217,29 +217,28 @@ def get_bounded_data(**kwargs):
     minmax = df.agg(['min', 'max'])
     
     if startType not in ['avg', 'median', 'start']:
-        # Invalid start type will simply return the reduced data set
-        print(f"   Invalid start type: {startType}. The data will not be bounded.")
-        return df[kwargs['input_parameter']], df[kwargs['sa_output_parameter']]
+        print(f" Invalid starting point type found! Will default to average starting point.")
+        startType = 'avg' # Will always default to average starting point
     
     if startType == 'avg':
         # Calculates the average and set bounds based on perturbation
         print( "   Preparing filtered data using average starting point and perturbation values of: " , perturbation)
         tempdf = df.copy()
-        tempdf.loc['average'] = df.mean(axis=0)
+        tempdf.loc['start'] = df.mean(axis=0)
         tempdf.loc['upper'] = df.mean(axis=0)
         tempdf.loc['lower'] = df.mean(axis=0)
         for a in kwargs['input_parameter']:
-            tempdf.loc['upper',a] = ((minmax.iloc[1][a]-tempdf.loc['average'][a]) * (1 + (perturbation[a] / 100)) ) + tempdf.loc['average'][a]
-            tempdf.loc['lower',a] =  tempdf.loc['average'][a] - ((tempdf.loc['average'][a]-minmax.iloc[0][a]) * (1 - (perturbation[a] / 100)))
+            tempdf.loc['upper',a] = ((minmax.iloc[1][a]-tempdf.loc['start'][a]) * ((perturbation[a] / 100)) ) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] =  tempdf.loc['start'][a] - ((tempdf.loc['start'][a]-minmax.iloc[0][a]) * ((perturbation[a] / 100)))
     
     if startType == 'median':
         # Calculates the median and set bounds based on perturbation
         print( f"   Preparing filtered data using median starting point and perturbation values of: " , perturbation)
         tempdf = df.copy()
-        tempdf.loc['median'] = df.median(axis=0)
+        tempdf.loc['start'] = df.median(axis=0)
         for a in kwargs['input_parameter']:
-            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['median'][a])*(1 + (perturbation[a] / 100)) + tempdf.loc['median'][a]
-            tempdf.loc['lower',a] = tempdf.loc['median'][a] - (tempdf.loc['median'][a]-minmax.iloc[0][a])*(1 - (perturbation[a] / 100))
+            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*((perturbation[a] / 100)) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*((perturbation[a] / 100))
         
     if startType == 'start':
         # Uses a custom start point and sets bounds based on perturbation
@@ -250,8 +249,8 @@ def get_bounded_data(**kwargs):
         tempdf = df.copy()
         tempdf.loc['start'] = start
         for a in kwargs['input_parameter']:
-            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*(1 + (perturbation[a] / 100)) + tempdf.loc['start'][a]
-            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*(1 - (perturbation[a] / 100))
+            tempdf.loc['upper',a] = (minmax.iloc[1][a] - tempdf.loc['start'][a])*((perturbation[a] / 100)) + tempdf.loc['start'][a]
+            tempdf.loc['lower',a] = tempdf.loc['start'][a] - (tempdf.loc['start'][a]-minmax.iloc[0][a])*((perturbation[a] / 100))
 
     finaldf = df.copy() # The dataframe to be returned
     for a in kwargs['input_parameter']:
@@ -263,4 +262,5 @@ def get_bounded_data(**kwargs):
     
     print(   f" Data filtering complete with remaining data containing" , finaldf.shape[0] , "points from" , df.shape[0] , "data points")
     finaldf.to_csv(output_path + '/reduced_filtered_data.csv') # Saves the filtered reduced data for potential future use
-    return finaldf[kwargs['input_parameter']], finaldf[kwargs['sa_output_parameter']]
+    # returns the filtered input, filtered output. Returns alongside that the starting point, upper bound and lower bounds of each dataset after perturbation.
+    return finaldf[kwargs['input_parameter']], finaldf[kwargs['sa_output_parameter']], tempdf

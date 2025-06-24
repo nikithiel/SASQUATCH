@@ -133,6 +133,9 @@ Here is a short description:
 | sa_17_segment_model | `NIPCE` | Defiens the model for segment plot |
 | sa_sample_size | `512` | sample size for SA |
 | sa_output_parameter | `WSS Eloss ...` | defines the output parameter for SA calculation |
+| input_start | `average` *or* `median` | the base point to be used as a start point for the perturbation. use `specific` to use user defined starting points. |
+| input_start_point | `1 2 3 4` | the starting points to be used if `input_start` is set to `specific` |
+| input_start_perturbation | `10` | the percentage of the perturbation from the starting point of the input. can either be a single value or the same amount of values as the start points|
 | output_parameter_sa_plot | `WSS Eloss ...`| defines output parameters for plotting in GSA |
 | output_units_sa_plot | `Pa m^3 Pa` | units of output parameter for plotting in GSA |
 | output_parameter_sa_plot_label | `WSS Eloss ...` | specify if you want labels that differ from output parameter names in .csv |
@@ -140,9 +143,9 @@ Here is a short description:
 # Uncertainty Quantification
 | Name | Example input | Explanation |
 | ---- | ---- | ---- |
-| input_start | `average` *or* `median` | the base point to be used as a start point for the perturbation. use `specific` to use user defined starting points. |
-| input_start_points | `1 2 3 4` | the starting points to be used if `input_start` is set to `specific` |
-| input_start_perturbation | `10` | the percentage of the perturbation from the starting point of the input|
+| uq_output_parameter | [a,b] [c,d] | grouped parameter for plotting output variation in uncertainty quantification. the parameters are grouped in the brackets and separated using a comma within group and a space between groups. if left empty, will instead use all parameters in a single group |
+| uq_output_parameter_label | [e,f] [g,h] | the labels that corresponds to the parameter in uq_output_parameter. input shares the same format. |
+| uq_output_units | `AB` `CD` | the output units corresponding the output groups. input shares the same amount of groups in uq_output_parameter|
 
 ### Project specific
 Here you can add your project specific settings. In case of the *Mitral Valve Uncertainty Quantification* they`re the following
