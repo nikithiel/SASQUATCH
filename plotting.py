@@ -254,7 +254,7 @@ def actual_scatter_plot(X_df, y_df, output_path, is_title=True, title="Pairplot 
         j = 0
 
     fig.tight_layout()
-    save_plot(plt=plt, file_path=output_path + title, dpi=600, bbox_inches='tight')
+    save_plot(plt=plt, file_path=output_path + title, dpi=600)
     
 def plot_boxplots(X_df, y_df, output_path, is_title=True, title="Boxplots of Dataframe"):
     """Plots and saves the boxplot of a dataframe.
