@@ -220,7 +220,15 @@ def plot_feature_distribution(df, output_path, output_units=None, num_bins=10, i
     save_plot(plt, output_path + title)
 
 def actual_scatter_plot(X_df, y_df, output_path, is_title=True, title="Pairplot of Data reduced"):
+    """Plot a reduced pairplot of the data
 
+    Args:
+        X_df (DataFrame): Parameter input data.
+        y_df (DataFrame): Parameter output data.
+        output_path (str): Path where the file will be saved.
+        is_title (bool, optional): True to plot title. Defaults to True.
+        title (str, optional): Title name. Defaults to "Pairplot of Data reduced".
+    """
     plot_size = max(X_df.shape[1], y_df.shape[1])
     plt.rcParams['mathtext.fontset'] = 'stix'
     plt.rcParams['font.family'] = 'ST'
@@ -734,11 +742,8 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
     uncertainties = sorted(data.keys())
     num_params = len(output_parameters)
     num_plots = len(data[uncertainties[0]][model][0])
-    #plt.ticklabel_format(axis='y', style='sci', scilimits= (0,0))
 
     fig, axes = plt.subplots(num_params if all_in_one == False else 1, 1, figsize=figsize)
-    """if num_params < 10: colors = plt.get_cmap('tab10').colors
-    else: colors = plt.get_cmap('gist_rainbow').colors"""
     cm = plt.get_cmap('gist_rainbow')
     for i, output_parameter in enumerate(output_parameters):
         plot_data = []
@@ -771,7 +776,6 @@ def bounds_mean_std(data, output_path, output_parameters=[0], output_names = ['d
             if annotation == 'legend' and j == len(uncertainties)-1: ax.text(x, mean_val, f'{output_dict[output_names[i]]}, {std}={100*std_val/mean_val:.2f}%', ha='center', va='bottom')
 
     # Title and other adjustments
-    # fig.legend(labels=input_label_list, bbox_to_anchor=(0.5, 0.05), loc='upper center', ncol=len(input_label_list))
     fig.suptitle(title if is_title else None)
     plt.tight_layout()
     save_plot(plt, output_path + title + "_" + model + "_" + annotation)
