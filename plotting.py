@@ -6,8 +6,6 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import matplotlib.gridspec as gridspec
-import matplotlib.ticker as mticker
 from matplotlib.ticker import ScalarFormatter
 import os
 from sklearn.multioutput import MultiOutputRegressor
@@ -16,42 +14,9 @@ from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib import ticker
 from scipy.stats import gaussian_kde
-from sklearn.metrics import r2_score
 from statsmodels.multivariate.manova import MANOVA
 
-######### THESIS SPECIFIC #########
-# TODO: Update this
-thesis = True
-units_in = ['mm','mm','°','mm']
-input_dict = {
-    'y': r'$y_d$',
-    'z': r'$z_d$',
-    'alpha': r'$\alpha$',
-    'R': r'$R_L$'
-}
-output_dict = {
-    'Ekin': 'Ekin',
-    'TVPG': 'TVPG',
-    'Eloss': 'Eloss',
-    'WSS': 'WSS',
-    'wss-1': r'WSS$_1$',
-    'wss-2': r'WSS$_2$',
-    'wss-3': r'WSS$_3$',
-    'wss-4': r'WSS$_4$',
-    'wss-5': r'WSS$_5$',
-    'wss-6': r'WSS$_6$',
-    'wss-7': r'WSS$_7$',
-    'wss-8': r'WSS$_8$',
-    'wss-9': r'WSS$_9$',
-    'wss-10': r'WSS$_{10}$',
-    'wss-11': r'WSS$_{11}$',
-    'wss-12': r'WSS$_{12}$',
-    'wss-13': r'WSS$_{13}$',
-    'wss-14': r'WSS$_{14}$',
-    'wss-15': r'WSS$_{15}$',
-    'wss-16': r'WSS$_{16}$',
-    'wss-17': r'WSS$_{17}$'
-}
+thesis = False
 
 plt_style = { # Use to change the formatting and text of the plots
     'mathtext.fontset' : 'stix', 
@@ -68,6 +33,7 @@ with open('configMVUQ.txt','r') as file:
             splitted_line = line.split()
         if splitted_line == []:
             continue
+        
         if splitted_line[0] == 'plot_type':
             #splitted_line = line.split()
             values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
@@ -79,6 +45,18 @@ with open('configMVUQ.txt','r') as file:
                 for value in values:
                     types.append(value)
 
+        # Read output parameters
+        if splitted_line[0] == 'output_parameter':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
+
+                # Store the values as a list
+                output_parameter_list = []
+                for value in values:
+                    output_parameter_list.append(value)
+                    
         # Read output units
         if splitted_line[0] == 'output_units':
             #splitted_line = line.split()
@@ -102,7 +80,18 @@ with open('configMVUQ.txt','r') as file:
                 output_label_list = []
                 for value in values:
                     output_label_list.append(value)
+        
+        # Read input parameters
+        if splitted_line[0] == 'input_parameter':
+            #splitted_line = line.split()
+            values_end = next((i for i, x in enumerate(splitted_line) if x.startswith('#')), None)
+            if len(splitted_line) > 1:
+                values = splitted_line[1:values_end]
 
+                # Store the values as a list
+                input_parameter_list = []
+                for value in values:
+                    input_parameter_list.append(value)
         # Read input units
         if splitted_line[0] == 'input_units':
             #splitted_line = line.split()
@@ -127,6 +116,8 @@ with open('configMVUQ.txt','r') as file:
                 for value in values:
                     input_label_list.append(value)
 
+input_dict = dict(zip(input_parameter_list, input_label_list))
+output_dict = dict(zip(output_parameter_list, output_label_list))
 class ScalarFormatterForceFormat(ScalarFormatter):
     def _set_format(self, vmin=None, vmax=None):
 

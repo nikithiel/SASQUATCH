@@ -1,5 +1,5 @@
 # Run Type
-run_type su
+run_type uq
 
 # Data
 data_path Data_example.csv
