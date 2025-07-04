@@ -15,22 +15,17 @@ Mail: joel.gestrich@rwth-aachen.de, niklas.thiel@rwth-aachen.de
 
 # ----- Imports ----- #
 import warnings
-import pandas as pd
 from initialization import read_user_defined_parameters, get_data_bounds
 from preprocessing import preprocessing, get_bounded_data
 from models import creatingModels
 from surrogate_model_comparison import kFold_Evaluation, train_and_save_models
-from plotting import plot_smc_timings, plot_smc_r2score_and_errors, plot_data, plot_densities
-from plotting import surrogate_model_predicted_vs_actual, show_plots, plot_sa_results_heatmap
-from plotting import plot_sa_results_17_segments, plot_boxplots, plot_correlation
-from plotting import plot_feature_distribution, plot_feature_scatterplot, actual_scatter_plot
+from plotting import plot_densities, show_plots, plot_sa_results_heatmap
+from plotting import plot_sa_results_17_segments
 from plotting import bounds_variation_plot, bounds_mean_std, bounds_sobol
+from plotting import plot_data_analysis, plot_surrogate_model_comparison
 from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_perturbation
 
 import os
-import pickle
-import time
-import collections.abc
 
 # ----- Program Information ----- #
 print("\n===============================================")
@@ -54,14 +49,7 @@ if run_type == 'da':
 
     # Plotting default plots
     print("Plotting Data\n------------")
-    plot_correlation(X_df, y_df, output_plots)
-    plot_feature_distribution(y_df, output_plots, dict(zip(parameter['output_parameter'], parameter['output_units'])), num_bins=20, title="Distribution of Output Parameter")
-    actual_scatter_plot(X_df, y_df, output_plots)
-    #show_plots() if input(" Display plots?: (y/n) ") == 'y' else None
-
-    # Optional plots
-    plot_boxplots(X_df, y_df, output_plots, title="Boxplots of Ouput Parameter") if input(" Would you like to plot the boxplot as well?: (y/n)") == 'y' else None
-    plot_data(X_df, y_df, output_plots) if input(" Would you like to plot the detailed scatterplot as well?: (y/n)") == 'y' else None
+    plot_data_analysis(X_df, y_df, output_path=output_plots, **parameter)
     show_plots() if showplot else None
     print("Analyze Data: Done")
 
@@ -102,16 +90,11 @@ elif run_type == 'su' or run_type == 'sc':
     if parameter['plot_data']:
         # ----- Plotting Results ----- #
         # Plotting default plot
-        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=True, is_title=False, title="Model Errors and Scores avrg r2 mape")
-
-        # Optional plots
-        plot_smc_r2score_and_errors(smc_results, parameter['output_parameter'], output_plots, metrics=parameter['metrics'], average_output=False, is_title=False, title="Model Errors and Scores", rmse_log_scale=True) if input(" Would you like to plot detailed r2 score?: (y/n) ") == 'y' else None
-        surrogate_model_predicted_vs_actual(models, X_df, y_df, output_plots, parameter['output_parameter'], dict(zip(parameter['output_parameter'], parameter['output_units']))) if input(" Would you like to plot the model comparison as a scatter plot?: (y/n) ") == 'y' else None
-        plot_smc_timings(smc_results, output_plots, is_title=False) if input(" Would you like to plot the surrogate model comparison timing plot?: (y/n) ") == 'y' else None
+        plot_surrogate_model_comparison(smc_results, X_df, y_df, output_path=output_plots, models=models, kwargs=parameter)
         show_plots() if showplot else None
         
         print("  Plotting of smc results: Done")
-        print("Surrogate Model Comparison: Done")
+    print("Surrogate Model Comparison: Done")
 
 elif run_type == 'sa':  
     print("Sensitivity Analysis")
@@ -119,8 +102,7 @@ elif run_type == 'sa':
     # ----- Initialize path to save the results ----- #
     try:
         # Creating the path to save the file
-        output_data = './output_data/' + parameter['output_name'] + '/' + 'sensitivity_analysis' + '/'
-        output_plots = output_data
+        output_plots = './output_data/' + parameter['output_name'] + '/' + 'sensitivity_analysis' + '/'
 
     except Exception:
         print("!!! Error: Parameter in config.txt file missing !!!")
@@ -141,7 +123,7 @@ elif run_type == 'sa':
 
     # ----- Saving SA Results ----- #
     if input('   Do you want to save the sensitivity analysis results(y/n):' ) == 'y':
-        with open("sa_results.txt", 'a') as sa_out_file:
+        with open(os.path.join(output_plots,"sa_results.txt"), 'a') as sa_out_file:
             sa_out_file.write(str(sa_results))
         print("  Saving sensitivity analysis results: Done")
     else:
@@ -159,7 +141,7 @@ elif run_type == 'sa':
     plot_17_segment = True if input (" Plot the 17 segment model as well? (y/n)") == 'y' else False
     plot_sa_results_heatmap(sa_results, model_names, input_parameter_list, parameter['output_parameter_sa_plot'], output_plots, parameter['sa_sobol_indice'])
     if plot_17_segment:
-        plot_sa_results_17_segments(sa_results, input_parameter_list, output_plots, parameter['sa_17_segment_model'], parameter['sa_sobol_indice'])
+        plot_sa_results_17_segments(sa_results, input_parameter_list, output_plots, parameter['sa_17_segment_model'].replace("_"," "), parameter['sa_sobol_indice'])
     show_plots() if showplot else None
     print("  Plotting of sa results: Done")
 

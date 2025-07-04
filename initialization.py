@@ -1,7 +1,3 @@
-from preprocessing import read_ansys_output_to_dfs, mean_of_timesteps, normalize_data, scale_data
-import pandas as pd
-import os
-
 def read_user_defined_parameters(filename):
     """Reading user defined parameter from config.txt file.
 

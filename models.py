@@ -8,8 +8,7 @@ from sklearn.tree import DecisionTreeRegressor
 import chaospy as cp
 import pandas as pd
 import numpy as np
-import os
-#If the error No Module Named pkg_resources come up, then please run pip install setuptools to fix this
+# If the error No Module Named pkg_resources come up, then please run pip install setuptools to fix this
 
 def creatingModels(bounds, parameter):
     """Creates models.
