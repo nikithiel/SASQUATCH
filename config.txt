@@ -1,0 +1,61 @@
+# Run Type
+run_type uq
+
+# Data
+data_path Data_example.csv
+
+input_parameter y z alpha R
+input_units mm mm $^\circ$ mm
+input_parameter_label $y_d$ $z_d$ $\alpha$ $R_L$
+
+output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
+output_units Pa Pa*m$^3$ Pa*m$^3$ Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa Pa
+output_parameter_label WSS $E_{loss}$ $E_{kin}$ TVPG WSS$_1$ WSS$_2$ WSS$_3$ WSS$_4$ WSS$_5$ WSS$_6$ WSS$_7$ WSS$_8$ WSS$_9$ WSS$_{10}$ WSS$_{11}$ WSS$_{12}$ WSS$_{13}$ WSS$_{14}$ WSS$_{15}$ WSS$_{16}$ WSS$_{17}$
+output_name default
+
+is_transient True
+lower_bound 721
+upper_bound 1200
+normalize False
+scaler none
+save_data none
+
+# Models
+models NIPCE #KNN Svr-Rbf Svr-Poly Bayesian-Ridge DecisionTree NIPCE GP
+NIPCE_order 2
+
+# Training and Testing
+n_splits 10
+shuffle True
+random_state 44
+metrics r2_score MAPE
+
+# Plotting
+plot_data True
+is_plotting_data True
+is_plotting_correlation_matrix False
+is_plotting_r2_comparison True
+is_plotting_model_data_comparison True
+is_plotting_df_boxplot False
+is_plotting_model_comparison True
+is_plotting_sa_heatmap True
+number_of_top_models 6
+plot_type pdf
+
+# Sensitivity Analysis
+sa_sobol_indice ST
+sa_17_segment_model NIPCE_2
+sa_sample_size 512
+sa_output_parameter WSS Eloss Ekin TVPG wss-1 wss-2 wss-3 wss-4 wss-5 wss-6 wss-7 wss-8 wss-9 wss-10 wss-11 wss-12 wss-13 wss-14 wss-15 wss-16 wss-17
+input_start median
+input_start_point 1 2 3 4 
+input_start_perturbation 63 63 100 63
+output_parameter_sa_plot WSS Eloss Ekin TVPG
+output_units_sa_plot Pa Pa*m$^3$ Pa*m$^3$ Pa 
+output_parameter_sa_plot_label WSS $E_{loss}$ $E_{kin}$ TVPG
+
+# Uncertainty Quantification 
+uq_metric percentage
+uq_output_parameter [WSS,TVPG] [Eloss,Ekin]
+uq_output_parameter_label [WSS,TVPG] [$E_{loss}$,$E_{kin}$]
+uq_output_units Pa Pa*m$^3$

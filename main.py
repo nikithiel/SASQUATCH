@@ -37,7 +37,7 @@ print()
 warnings.filterwarnings("ignore") # ignores warnings
 
 # Reading user defined hyper parameter
-parameter = read_user_defined_parameters('configMVUQ.txt')
+parameter = read_user_defined_parameters('config.txt')
 showplot = parameter['plot_data']
 
 run_type = parameter['run_type']
