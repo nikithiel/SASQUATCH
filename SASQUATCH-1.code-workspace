@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"name": "SASQUATCH-1",
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.analysis.typeCheckingMode": "basic",
+		"git.ignoreLimitWarning": true
+	}
+}

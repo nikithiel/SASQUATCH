@@ -42,6 +42,9 @@ showplot = parameter['plot_data']
 
 run_type = parameter['run_type']
 
+if not parameter['output_name']:
+    parameter['output_name'] = "default"
+
 if run_type == 'da':
     print("Analyze Data\n------------")
     X_df, y_df = preprocessing(da=True, **parameter)
