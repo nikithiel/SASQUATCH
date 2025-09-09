@@ -49,11 +49,10 @@ It is also possible to add a project specific program.
 
 ## B) Using for Your Own Project
 ### General usage
-1. Provide the data
-2. Set preferences in *config.txt*
-3. Run program and choose *da*, *sc*, *sa*, *uq*, or *ps*
-4. Answer the prompts asking for optional plots
-5. The results should be stored
+1. Provide input/output data in *input_data* folder
+2. Set preferences in *config.txt* (see chapter **C) Settings and Preferences** for more details)
+3. Run main.py
+4. See results in *output_data* folder
 
 ### Adding project specific features #TODO
 **Adding surrogate models:**
