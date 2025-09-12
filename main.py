@@ -23,8 +23,8 @@ from plotting import plot_densities, show_plots, plot_sa_results_heatmap
 from plotting import plot_sa_results_17_segments
 from plotting import bounds_variation_plot, bounds_mean_std, bounds_sobol
 from plotting import plot_data_analysis, plot_surrogate_model_comparison
+from plotting import is_tutorial
 from sensitivity_analysis import sensitivity_analysis, sensitivity_analysis_perturbation
-
 import os
 
 # ----- Program Information ----- #
@@ -37,7 +37,7 @@ print()
 warnings.filterwarnings("ignore") # ignores warnings
 
 # Reading user defined hyper parameter
-config_file = 'tutorial_config.txt' if tutorial else 'config.txt'
+config_file = 'config.txt'
 parameter = read_user_defined_parameters(config_file)
 showplot = parameter['plot_data']
 

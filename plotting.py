@@ -25,7 +25,7 @@ plt_style = { # Use to change the formatting and text of the plots
     }
 plt.rcParams.update(**plt_style)
 # Read specifically the types to be plotted from the input file
-config_file = 'tutorial_config.txt' if tutorial else 'config.txt'
+config_file = 'config.txt'
 with open(config_file,'r') as file:
     for line in file:
         # Read plot type
