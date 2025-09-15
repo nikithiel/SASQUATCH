@@ -37,10 +37,16 @@ print()
 warnings.filterwarnings("ignore") # ignores warnings
 
 # Reading user defined hyper parameter
-parameter = read_user_defined_parameters('config.txt')
+config_file = 'tutorial_config.txt' if tutorial else 'config.txt'
+parameter = read_user_defined_parameters(config_file)
 showplot = parameter['plot_data']
 
 run_type = parameter['run_type']
+if tutorial_run_type:
+    run_type = tutorial_run_type
+    
+if tutorial_output_name:
+    parameter['output_name'] = tutorial_output_name
 
 if not parameter['output_name']:
     parameter['output_name'] = "default"
@@ -108,7 +114,7 @@ elif run_type == 'sa':
         output_plots = './output_data/' + parameter['output_name'] + '/' + 'sensitivity_analysis' + '/'
 
     except Exception:
-        print("!!! Error: Parameter in config.txt file missing !!!")
+        print("!!! Error: Parameter in config file missing !!!")
 
     # ----- DATA Preprocessing ----- #
     X_df, y_df = preprocessing(da=False, **parameter)

@@ -24,9 +24,9 @@ plt_style = { # Use to change the formatting and text of the plots
     'font.size' : 10
     }
 plt.rcParams.update(**plt_style)
-
 # Read specifically the types to be plotted from the input file
-with open('configMVUQ.txt','r') as file:
+config_file = 'tutorial_config.txt' if tutorial else 'config.txt'
+with open(config_file,'r') as file:
     for line in file:
         # Read plot type
         if line:
