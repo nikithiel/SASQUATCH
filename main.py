@@ -41,6 +41,9 @@ config_file = 'config.txt'
 parameter = read_user_defined_parameters(config_file)
 showplot = parameter['plot_data']
 
+if tutorial_showplot:
+    showplot = tutorial_showplot
+
 run_type = parameter['run_type']
 if tutorial_run_type:
     run_type = tutorial_run_type
