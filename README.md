@@ -4,7 +4,7 @@
 *A framework for sensitivity analysis and uncertainty quantification in cardiac hemodynamics*
 
 **Date:** June 2024\
-**Mail:** thiel@ame.rwth-aachen.de or neidlin@ame.rwth-aachen.de
+**Mail:** thiel@ame.rwth-aachen.de or geno.jayadi@rwth-aachen.de
 ## A) General Idea
 This project consists of three major parts:
 1. Data Analysis
